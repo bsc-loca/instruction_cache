@@ -108,9 +108,7 @@ assign icache_treq_o.valid = treq_valid || valid_ireq_d ;
 assign mmu_tresp_d = mmu_tresp_i;
 
 //- Split virtual address into index and offset to address cache arrays.
-assign vaddr_index = ( cache_wr_ena ) ?
-        {idx_d[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH+2],ifill_resp_i.beat} :
-         idx_d[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
+assign vaddr_index = idx_d[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
                      
 assign cline_tag_d  = mmu_tresp_q.ppn ;
                                                                 
@@ -127,27 +125,25 @@ assign icache_resp_o.valid = icache_resp_valid && !ireq_kill_d;
 //---------------------------------------------------------------------
 //------------------------------------------------------ IFILL request.
 
-assign icache_ifill_req_o.paddr = {cline_tag_d, 
-                                   idx_q[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH+2]};
+assign icache_ifill_req_o.paddr = {cline_tag_d,idx_q[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH]};
 
 assign icache_ifill_req_o.valid = ifill_req_valid  && !ireq_kill_d ;
 
 //-----------------------------------------------------------------------
-assign valid_ifill_resp = ifill_resp_i.valid & ifill_resp_i.ack;
+assign valid_ifill_resp = ifill_resp_i.valid /*& ifill_resp_i.ack*/;
 
 assign ifill_req_was_sent_d = icache_ifill_req_o.valid | 
                               (ifill_req_was_sent_q & ~valid_ifill_resp);
 
-assign ifill_process_started_d = ((ifill_resp_i.beat == 2'b00) && ifill_resp_i.valid) ? 1'b1 :
-                                  (valid_ifill_resp) ? 1'b0 : ifill_process_started_q;
+assign ifill_process_started_d = ifill_resp_i.valid ;
+//assign ifill_process_started_d = ((ifill_resp_i.beat == 2'b00) && ifill_resp_i.valid) ? 1'b1 :
+//                                  (valid_ifill_resp) ? 1'b0 : ifill_process_started_q;
 
 assign block_invalidate = ifill_process_started_q && ireq_kill_d ;
 
-assign valid_bit = 
-    (tag_we_valid && (ifill_resp_i.beat == 2'b00) && !ireq_kill_d && !ireq_kill_q) ?
-                                                                             1'b1 : 1'b0 ;
+assign valid_bit = tag_we_valid  && ~ireq_kill_d && ~ireq_kill_q ;
                                          
-assign tag_we = tag_we_valid && ((ifill_resp_i.beat == 2'b00) || block_invalidate) ;
+assign tag_we = tag_we_valid || block_invalidate ;
 
 sargantana_icache_ctrl  icache_ctrl (
     .clk_i              ( clk_i                     ),
@@ -221,6 +217,7 @@ sargantana_icache_checker ichecker(
     .read_tags_i        ( way_tags            ),
     .cmp_enable_q       ( cmp_enable_q        ),
     .cline_tag_d        ( cline_tag_d         ),
+    .fetch_idx_i        ( idx_q[5:4]          ),
     .way_valid_bits_i   ( way_valid_bits      ),
     .data_rd_i          ( cline_data_rd       ),
     .cline_hit_o        ( cline_hit           ),
