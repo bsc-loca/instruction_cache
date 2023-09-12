@@ -19,9 +19,9 @@ import drac_pkg::*;
 //------------------------------------------------ Global Configuration
 //- L1 instruction cache
 localparam int unsigned WORD_SIZE    = 64           ; //- Word size in a set.
-localparam int unsigned SET_WIDHT    = 512          ; //- Cache line
+localparam int unsigned SET_WIDHT    = 256          ; //- Cache line
 localparam int unsigned ASSOCIATIVE  = 4            ; //- Number of ways.
-localparam int unsigned ICACHE_DEPTH = 64           ; //- .
+localparam int unsigned ICACHE_DEPTH = 128           ; //- .
 
 localparam int unsigned ICACHE_N_WAY = ASSOCIATIVE  ; //- Number of ways.
 localparam int unsigned ICACHE_N_WAY_CLOG2 = $clog2( ICACHE_N_WAY );
@@ -36,8 +36,8 @@ localparam int unsigned BLOCK_ADDR_SIZE = 33;
 localparam int unsigned PPN_BIT_SIZE    = 27;
 localparam int unsigned TAG_WIDHT       = 27; //- Tag size.
 `else
-localparam int unsigned PADDR_SIZE      = 26;
-localparam int unsigned BLOCK_ADDR_SIZE = 26;
+localparam int unsigned PADDR_SIZE      = 27;
+localparam int unsigned BLOCK_ADDR_SIZE = 27;
 localparam int unsigned PPN_BIT_SIZE    = 20;
 localparam int unsigned TAG_WIDHT       = 20; //- Tag size.
 `endif
@@ -45,7 +45,7 @@ localparam int unsigned TAG_WIDHT       = 20; //- Tag size.
 localparam int unsigned VADDR_SIZE          = drac_pkg::ADDR_SIZE ;
 localparam int unsigned ICACHE_INDEX_WIDTH  = 12  ;
 localparam int unsigned ICACHE_TAG_WIDTH    = TAG_WIDHT  ;
-localparam int unsigned ICACHE_OFFSET_WIDTH = 6   ; // align to 64bytes
+localparam int unsigned ICACHE_OFFSET_WIDTH = 5   ; // align to 32bytes
 localparam int unsigned ICACHE_IDX_WIDTH    = ADDR_WIDHT;
 
 localparam logic [43:0] CachedAddrBeg = 44'h8000_0000; // begin of cached region
@@ -124,7 +124,7 @@ typedef struct packed {
   typedef struct packed {
       logic         valid ; // Valid response
       logic         ack   ; // IFILL request was received
-      logic [511:0] data  ; // Full cache line
+      logic [255:0] data  ; // Full cache line
       logic   [1:0] beat  ;
   } ifill_resp_i_t;
 
