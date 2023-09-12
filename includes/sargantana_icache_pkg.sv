@@ -36,7 +36,7 @@ localparam int unsigned BLOCK_ADDR_SIZE = 33;
 localparam int unsigned PPN_BIT_SIZE    = 27;
 localparam int unsigned TAG_WIDHT       = 27; //- Tag size.
 `else
-localparam int unsigned PADDR_SIZE      = 27;
+localparam int unsigned PADDR_SIZE      = 40;
 localparam int unsigned BLOCK_ADDR_SIZE = 27;
 localparam int unsigned PPN_BIT_SIZE    = 20;
 localparam int unsigned TAG_WIDHT       = 20; //- Tag size.
