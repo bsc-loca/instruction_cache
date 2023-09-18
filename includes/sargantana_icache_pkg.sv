@@ -114,18 +114,16 @@ typedef enum logic[2:0] {NO_REQ,
 //------------------------------------------------- IFILL
   
 typedef struct packed {
-    logic                            valid  ; //- valid invalidation and
-                                              //  invalidate only affected way
-    logic                            all    ; //- invalidate all ways
-    logic [ICACHE_INDEX_WIDTH-1:0]   idx    ; //- index to invalidate
-    logic [$clog2(ICACHE_N_WAY)-1:0] way    ; //- way to invalidate
-} inval_t;
+    logic                  valid  ; //- valid invalidation and
+    logic [PADDR_SIZE-1:0] paddr  ; //- index to invalidate
+} inv_t;
   
   typedef struct packed {
       logic         valid ; // Valid response
       logic         ack   ; // IFILL request was received
       logic [255:0] data  ; // Full cache line
       logic   [1:0] beat  ;
+      inv_t         inv   ;
   } ifill_resp_i_t;
 
   typedef struct packed {
