@@ -86,9 +86,13 @@ logic ifill_process_started_d   ;
 logic ifill_process_started_q   ;
 logic tag_we                    ;
 logic block_invalidate          ;
+logic valid_inv                 ;
 
 tresp_i_t  mmu_tresp_d;  
 tresp_i_t  mmu_tresp_q; 
+
+// a valid invalidation from L2
+assign valid_inv = ifill_resp_i.valid & ifill_resp_i.inv.valid ;
 
 //- It can only accept a request from the core if the cache is free.
 assign valid_ireq_d = lagarto_ireq_i.valid || replay_valid ;
@@ -108,7 +112,8 @@ assign icache_treq_o.valid = treq_valid || valid_ireq_d ;
 assign mmu_tresp_d = mmu_tresp_i;
 
 //- Split virtual address into index and offset to address cache arrays.
-assign vaddr_index = idx_d[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
+assign vaddr_index = valid_inv ? ifill_resp_i.inv.paddr[ICACHE_IDX_WIDTH:1] : 
+                                 idx_d[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
                      
 assign cline_tag_d  = mmu_tresp_q.ppn ;
                                                                 
@@ -139,11 +144,11 @@ assign ifill_process_started_d = ifill_resp_i.valid ;
 //assign ifill_process_started_d = ((ifill_resp_i.beat == 2'b00) && ifill_resp_i.valid) ? 1'b1 :
 //                                  (valid_ifill_resp) ? 1'b0 : ifill_process_started_q;
 
-assign block_invalidate = ifill_process_started_q && ireq_kill_d ;
+assign block_invalidate = ifill_process_started_q && ireq_kill_d ; 
 
-assign valid_bit = tag_we_valid  && ~ireq_kill_d && ~ireq_kill_q ;
+assign valid_bit = valid_inv ? 1'b0 : tag_we_valid & ~ireq_kill_d & ~ireq_kill_q ;
                                          
-assign tag_we = tag_we_valid || block_invalidate ;
+assign tag_we = tag_we_valid ;
 
 sargantana_icache_ctrl  icache_ctrl (
     .clk_i              ( clk_i                     ),
@@ -196,7 +201,7 @@ sargantana_top_memory icache_memory(
 sargantana_icache_replace_unit replace_unit(
     .clk_i          ( clk_i            ),
     .rstn_i         ( rstn_i           ),
-    .inval_i        ( block_invalidate ),
+    .inval_i        ( valid_inv        ),
     .cline_index_i  ( vaddr_index      ),
     .cache_rd_ena_i ( valid_ireq_d | cache_rd_ena ),
     .cache_wr_ena_i ( cache_wr_ena     ),

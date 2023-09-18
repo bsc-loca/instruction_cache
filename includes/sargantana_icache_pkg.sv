@@ -114,8 +114,8 @@ typedef enum logic[2:0] {NO_REQ,
 //------------------------------------------------- IFILL
   
 typedef struct packed {
-    logic                  valid  ; //- valid invalidation and
-    logic [PADDR_SIZE-1:0] paddr  ; //- index to invalidate
+    logic        valid  ; //- valid invalidation and
+    logic [11:0] paddr  ; //- index to invalidate
 } inv_t;
   
   typedef struct packed {

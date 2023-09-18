@@ -74,9 +74,9 @@ assign addr_valid_o = cline_index_i;
 
 //- To tag ram. In an invalidation only clear valid bits. 
                          // A valid read from core.
-assign tag_req_valid_o = (cache_rd_ena_i )          ? '1 :
+assign tag_req_valid_o = cache_rd_ena_i | inval_req ? '1 :
                          // Invalidation request to all ways.
-                         //(inval_req && inval_i.all) ? '1 :
+                         // inval_req  ? '1 :
                          // Invalidation request to one way.
                          //(inval_req)                ? way_to_inval_oh : 
                          //(inval_req)                ? way_to_replace_q_oh : 
