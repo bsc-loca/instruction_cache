@@ -51,6 +51,7 @@ for ( i=0; i<ICACHE_N_WAY; i++ )begin
 end
 endgenerate
 
+`ifdef SRAM_IP
 `ifdef PADDR_39
 
   //Tag array wires
@@ -278,5 +279,6 @@ endgenerate
   assign tag_way_o[3] = q_sram[79:60];
 
 `endif //PADDR_39
+`endif //SRAM_IP
 
 endmodule
