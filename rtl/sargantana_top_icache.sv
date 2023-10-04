@@ -79,14 +79,15 @@ logic treq_valid        ;
 logic valid_bit         ;
 logic valid_ifill_resp  ;
 
-logic ifill_req_was_sent_d;
-logic ifill_req_was_sent_q;
+logic ifill_req_was_sent_d ;
+logic ifill_req_was_sent_q ;
 
 logic ifill_process_started_d   ;
 logic ifill_process_started_q   ;
 logic tag_we                    ;
 logic block_invalidate          ;
 logic valid_inv                 ;
+logic ctrl_ready                ;
 
 tresp_i_t  mmu_tresp_d;  
 tresp_i_t  mmu_tresp_q; 
@@ -163,7 +164,7 @@ sargantana_icache_ctrl  icache_ctrl (
     .ireq_valid_i       ( valid_ireq_q              ),
     .ireq_kill_i        ( ireq_kill_q               ),
     .ireq_kill_d        ( ireq_kill_d               ),
-    .iresp_ready_o      ( icache_resp_o.ready       ),
+    .iresp_ready_o      ( ctrl_ready                ),
     .iresp_valid_o      ( icache_resp_valid         ),
     .mmu_miss_i         ( mmu_tresp_q.miss          ),
     .mmu_ptw_valid_i    ( mmu_tresp_q.ptw_v         ),
@@ -180,6 +181,7 @@ sargantana_icache_ctrl  icache_ctrl (
     .flush_en_o         (flush_enable               )        
 );                                          
 
+assign icache_resp_o.ready = ctrl_ready &~ valid_inv ;
 
 sargantana_top_memory icache_memory(
     .clk_i       ( clk_i  ),
