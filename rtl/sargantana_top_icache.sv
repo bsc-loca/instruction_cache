@@ -135,7 +135,7 @@ assign icache_ifill_req_o.paddr = {cline_tag_d,idx_q[ICACHE_INDEX_WIDTH-1:ICACHE
 assign icache_ifill_req_o.valid = ifill_req_valid  && !ireq_kill_d ;
 
 //-----------------------------------------------------------------------
-assign valid_ifill_resp = ifill_resp_i.valid /*& ifill_resp_i.ack*/;
+assign valid_ifill_resp = ifill_resp_i.valid & ~ifill_resp_i.inv.valid;
 
 assign ifill_req_was_sent_d = icache_ifill_req_o.valid | 
                               (ifill_req_was_sent_q & ~valid_ifill_resp);
