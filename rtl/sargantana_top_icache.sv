@@ -171,7 +171,7 @@ sargantana_icache_ctrl  icache_ctrl (
     .mmu_ex_valid_i     ( mmu_tresp_q.xcpt          ),
     .treq_valid_o       ( treq_valid                ),
     .valid_ifill_resp_i ( valid_ifill_resp          ),
-    .ifill_resp_valid_i ( ifill_resp_i.valid        ),
+    .ifill_resp_valid_i ( valid_ifill_resp          ),
     .ifill_sent_ack_i   ( ifill_req_was_sent_d      ),
     .ifill_req_valid_o  ( ifill_req_valid           ),
     .cline_hit_i        ( cline_hit                 ),   
