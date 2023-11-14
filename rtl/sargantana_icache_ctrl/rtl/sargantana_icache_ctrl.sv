@@ -97,7 +97,7 @@ always_comb begin
                                   !is_flush_or_kill &&  new_request && !ireq_kill_d);
             miss_o            = 1'b0  ;//PMU
             miss_kill_o       = 1'b0  ;//PMU
-            iresp_valid_o     = ( is_hit && !mmu_miss_i && 
+            iresp_valid_o     = ( ( (is_hit && !mmu_miss_i) || mmu_ex_valid_i ) && 
                                  !is_flush_or_kill && new_request) ;
             cache_wr_ena_o    = 1'b0  ;
             flush_en_o        = flush_i  ;
