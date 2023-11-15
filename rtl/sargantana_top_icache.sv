@@ -125,8 +125,8 @@ assign icache_resp_o.vaddr = {vpn_q,idx_q};
 logic icache_resp_valid ; 
 assign icache_resp_o.xcpt = mmu_tresp_q.xcpt && icache_resp_valid;
 
-assign icache_resp_o.valid = icache_resp_valid && !ireq_kill_d;       
-//assign icache_resp_o.valid = icache_resp_valid;       
+// assign icache_resp_o.valid = icache_resp_valid && !ireq_kill_d;       
+assign icache_resp_o.valid = icache_resp_valid;       
 
 //---------------------------------------------------------------------
 //------------------------------------------------------ IFILL request.
