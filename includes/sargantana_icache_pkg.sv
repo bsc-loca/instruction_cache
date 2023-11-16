@@ -31,7 +31,7 @@ localparam int unsigned TAG_ADDR_WIDHT = $clog2( TAG_DEPTH )   ; //-
 localparam int unsigned WAY_WIDHT    = SET_WIDHT               ; //- 
 
 `ifdef PADDR_39
-localparam int unsigned PADDR_SIZE      = 33;
+localparam int unsigned PADDR_SIZE      = 40;
 localparam int unsigned BLOCK_ADDR_SIZE = 33;
 localparam int unsigned PPN_BIT_SIZE    = 27;
 localparam int unsigned TAG_WIDHT       = 27; //- Tag size.
