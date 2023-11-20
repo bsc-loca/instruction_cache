@@ -53,8 +53,8 @@ module sargantana_icache_way
         .data_o(data_o) 
     );
 `else
-    logic [127:0] RW0O_sram;
-    logic [127:0]  write_data;
+    logic [255:0] RW0O_sram;
+    logic [255:0]  write_data;
     logic [ADDR_WIDHT-1:0] address;
     logic write_enable;
     logic chip_enable;
@@ -65,43 +65,8 @@ module sargantana_icache_way
 	assign address = addr_i;
 
  
-    `ifdef MEMS_22NM 
-		`ifdef MEMS_R1PH
-			R1PH_256x128 L1InstArray (
-				.CLK(clk_i),
-				.CEN(chip_enable),
-				.RDWEN(write_enable),
-				.AW(addr_i[7:1]), // Port-A address word line inputs
-				.AC(addr_i[0]), // POrt-A address column inputs
-				.D(write_data), // Data
-				.BW(~{128{1'b0}}), // Mask
-				.T_LOGIC(1'b0), // Test logic, active high? 
-				.MA_SAWL(1'b0), // Margin adjust sense amp. Default: 1'b0
-				.MA_WL(1'b0),
-				.MA_WRAS(1'b0),
-				.MA_WRASD(1'b0),
-				.Q(RW0O_sram)
-            );
-		`else
-			R1DH_256x128 L1InstArray (
-				.CLK(clk_i),
-				.CEN(chip_enable),
-				.RDWEN(write_enable),
-				.AW(addr_i[7:1]), // Port-A address word line inputs
-				.AC(addr_i[0]), // POrt-A address column inputs
-				.D(write_data), // Data
-				.BW(~{128{1'b0}}), // Mask
-				.T_LOGIC(1'b0), // Test logic, active high? 
-				.MA_SAWL(1'b0), // Margin adjust sense amp. Default: 1'b0
-				.MA_WL(1'b0),
-				.MA_WRAS(1'b0),
-				.MA_WRASD(1'b0),
-				.Q(RW0O_sram)
-            );
-		`endif
-	
-    `elsif SYNTHESIS_7NM
-        RF_SP_256x128 L1InstArray (
+        //RF_SP_256x128 L1InstArray (
+        RF_SP_128x256 L1InstArray (
             .A(address),
             .D(write_data),
             .CLK(clk_i),
@@ -115,20 +80,6 @@ module sargantana_icache_way
             .STOV(1'b0),
             .RET(1'b0)
         );
-    `else
-    TS1N65LPHSA256X128M4F L1InstArray (
-        .A  (address) ,
-        .D  (write_data) ,
-        .BWEB  ({128{1'b0}}) ,
-        .WEB  (write_enable) ,
-        .CEB  (chip_enable) ,
-        .CLK  (clk_i) ,
-        .Q  (RW0O_sram),
-        .WTSEL(3'b000),
-        .RTSEL(2'b00),
-        .AWT(1'b0)
-    ); 
-    `endif
     
     assign data_o = RW0O_sram;
 `endif
