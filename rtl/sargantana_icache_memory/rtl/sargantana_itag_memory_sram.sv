@@ -52,7 +52,6 @@ end
 endgenerate
 
 `ifdef SRAM_IP
-`ifdef PADDR_39
 
   //Tag array wires
   logic [107:0] q_sram;
@@ -101,7 +100,6 @@ endgenerate
   assign tag_way_o[3] = q_sram[107:81];
 
 
-`endif //PADDR_39
 `endif //SRAM_IP
 
 endmodule

@@ -18,10 +18,10 @@ import drac_pkg::*;
 
 //------------------------------------------------ Global Configuration
 //- L1 instruction cache
-localparam int unsigned WORD_SIZE    = 64           ; //- Word size in a set.
-localparam int unsigned SET_WIDHT    = 256          ; //- Cache line
-localparam int unsigned ASSOCIATIVE  = 4            ; //- Number of ways.
-localparam int unsigned ICACHE_DEPTH = 128           ; //- .
+localparam int unsigned WORD_SIZE    = 64  ; //- Word size in a set.
+localparam int unsigned SET_WIDHT    = 256 ; //- Cache line
+localparam int unsigned ASSOCIATIVE  = 4   ; //- Number of ways.
+localparam int unsigned ICACHE_DEPTH = 128 ; //- .
 
 localparam int unsigned ICACHE_N_WAY = ASSOCIATIVE  ; //- Number of ways.
 localparam int unsigned ICACHE_N_WAY_CLOG2 = $clog2( ICACHE_N_WAY );
@@ -30,31 +30,21 @@ localparam int unsigned ADDR_WIDHT   = $clog2( ICACHE_DEPTH )  ; //- icache Addr
 localparam int unsigned TAG_ADDR_WIDHT = $clog2( TAG_DEPTH )   ; //- 
 localparam int unsigned WAY_WIDHT    = SET_WIDHT               ; //- 
 
-`ifdef PADDR_39
-localparam int unsigned PADDR_SIZE      = 40;
-localparam int unsigned BLOCK_ADDR_SIZE = 33;
-localparam int unsigned PPN_BIT_SIZE    = 27;
-localparam int unsigned TAG_WIDHT       = 27; //- Tag size.
-`else
-localparam int unsigned PADDR_SIZE      = 40;
-localparam int unsigned BLOCK_ADDR_SIZE = 27;
-localparam int unsigned PPN_BIT_SIZE    = 20;
-localparam int unsigned TAG_WIDHT       = 20; //- Tag size.
-`endif
+localparam int unsigned ICACHE_OFFSET_WIDTH = $clog2(SET_WIDHT/8); // align to 64bytes
+localparam int unsigned ICACHE_INDEX_WIDTH  = $clog2(ICACHE_DEPTH) + ICACHE_OFFSET_WIDTH;
 
-localparam int unsigned VADDR_SIZE          = drac_pkg::ADDR_SIZE ;
-localparam int unsigned ICACHE_INDEX_WIDTH  = 12  ;
-localparam int unsigned ICACHE_TAG_WIDTH    = TAG_WIDHT  ;
-localparam int unsigned ICACHE_OFFSET_WIDTH = 5   ; // align to 32bytes
+localparam int unsigned BLOCK_ADDR_SIZE = drac_pkg::PHY_ADDR_SIZE - ICACHE_OFFSET_WIDTH;
+localparam int unsigned PPN_BIT_SIZE    = drac_pkg::PHY_ADDR_SIZE - ICACHE_INDEX_WIDTH;
+localparam int unsigned TAG_WIDHT       = drac_pkg::PHY_ADDR_SIZE - ICACHE_INDEX_WIDTH; //- Tag size.
+localparam int unsigned VADDR_SIZE      = drac_pkg::VIRT_ADDR_SIZE; // TODO: check this
+
+localparam int unsigned ICACHE_TAG_WIDTH    = TAG_WIDHT;
 localparam int unsigned ICACHE_IDX_WIDTH    = ADDR_WIDHT;
-
-localparam logic [43:0] CachedAddrBeg = 44'h8000_0000; // begin of cached region
-localparam logic [43:0] CachedAddrEnd = 44'h80_0000_0000; // end of cached region  
 
 `ifdef FETCH_ONE_INST
     localparam int unsigned FETCH_WIDHT = riscv_pkg::INST_SIZE;
 `else
-    localparam int unsigned FETCH_WIDHT = drac_pkg::ICACHELINE_SIZE+1; //127+1
+    localparam int unsigned FETCH_WIDHT = drac_pkg::ICACHELINE_SIZE;
 `endif
 
 //------------------------------------------------------- exception
@@ -98,15 +88,15 @@ typedef enum logic[2:0] {NO_REQ,
 //------------------------------------------------------
 //------------------------------------------------- MMU
     typedef struct packed {    
-        logic                  miss ;
-        logic                  ptw_v;  // ptw response valid
-        logic [PPN_BIT_SIZE-1:0]   ppn  ;  // physical address in
-        logic                  xcpt ;  // exception occurred during fetch
+        logic                    miss  ;
+        logic                    ptw_v ;  // ptw response valid
+        logic [PPN_BIT_SIZE-1:0] ppn   ;  // physical address in
+        logic                    xcpt  ;  // exception occurred during fetch
     } tresp_i_t;
 
     typedef struct packed {
-        logic                  valid;       // address translation request
-        drac_pkg::icache_vpn_t vpn  ;  
+        logic                  valid ;       // address translation request
+        drac_pkg::icache_vpn_t vpn   ;  
     } treq_o_t;
 
 
@@ -114,26 +104,23 @@ typedef enum logic[2:0] {NO_REQ,
 //------------------------------------------------- IFILL
   
 typedef struct packed {
-    logic        valid  ; //- valid invalidation and
-    logic [11:0] paddr  ; //- index to invalidate
+    logic                          valid  ; //- valid invalidation and
+    logic [ICACHE_INDEX_WIDTH-1:0] paddr  ; //- index to invalidate
 } inv_t;
   
   typedef struct packed {
-      logic         valid ; // Valid response
-      logic         ack   ; // IFILL request was received
-      logic [255:0] data  ; // Full cache line
-      logic   [1:0] beat  ;
-      inv_t         inv   ;
+      logic                 valid ; // Valid response
+      logic                 ack   ; // IFILL request was received
+      logic [SET_WIDHT-1:0] data  ; // Full cache line
+      logic           [1:0] beat  ;
+      inv_t                 inv   ;
   } ifill_resp_i_t;
 
   typedef struct packed {
-      logic                            valid  ;  // valid request
-      logic [$clog2(ICACHE_N_WAY)-1:0] way    ;  // way to replace
-      logic [PADDR_SIZE-1:0]           paddr  ;  // physical address
+      logic                               valid  ;  // valid request
+      logic [$clog2(ICACHE_N_WAY)-1:0]    way    ;  // way to replace
+      logic [drac_pkg::PHY_ADDR_SIZE-1:0] paddr  ;  // physical address
   } ifill_req_o_t;
-
-
-
 
 endpackage
 
