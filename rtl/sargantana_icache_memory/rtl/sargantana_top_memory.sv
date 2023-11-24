@@ -50,7 +50,7 @@ sargantana_idata_memory idata_memory(
 );
 
 //- Tags memory
-`ifndef SRAM_MEMORIES
+`ifndef SRAM_IP
     sargantana_itag_memory itag_memory(
         .clk_i      ( clk_i       ),
         .rstn_i     ( rstn_i      ),

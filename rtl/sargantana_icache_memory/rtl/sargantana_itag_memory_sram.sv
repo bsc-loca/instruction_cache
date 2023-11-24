@@ -28,8 +28,6 @@ module sargantana_itag_memory_sram
     output logic                [ICACHE_N_WAY-1:0] vbit_o       
 );
 
-//logic [ICACHE_N_WAY-1:0] mem_ready;
-
 //- To build a memory of tags for each path.
 
 //Valid bit wires
@@ -79,7 +77,7 @@ endgenerate
   assign address = addr_i;
   assign chip_enable = ~(|req_i);
 
-  RF_SP_128x108 MDArray_tag_il1 (
+  RF_SP_128x108_M2B1S2 MDArray_tag_il1 (
       .A(address),
       .D(write_data),
       .CLK(clk_i),

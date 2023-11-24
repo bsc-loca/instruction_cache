@@ -25,24 +25,7 @@ module sargantana_icache_way
     output logic  [SET_WIDHT-1:0] data_o     
 );
 
-//Build the number of sets of one way.
-//genvar i;
-//generate
-//for ( i=0; i<ICACHE_N_SET; i++ )begin:n_set
-//set_ram sram(
-//    .clk_i (clk_i ),
-//    .rstn_i(rstn_i),
-//    .req_i (req_i ),
-//    .we_i  (we_i  ),
-//    .addr_i(addr_i),
-//    .data_i(data_i [i*SET_WIDHT +: SET_WIDHT]),  //- The data input is segmented 
-//                                                 //  according to sets.
-//    .data_o(data_o [i*SET_WIDHT +: SET_WIDHT ])  //- The acquired data are organized 
-//                                                 //  into one vector.
-//);
-//end
-//endgenerate
-`ifndef SRAM_MEMORIES
+`ifndef SRAM_IP
     sargantana_set_ram sram(
         .clk_i (clk_i ),
         .rstn_i(rstn_i),
@@ -63,23 +46,25 @@ module sargantana_icache_way
 	assign write_enable = ~we_i;
 	assign chip_enable = ~req_i;
 	assign address = addr_i;
-
- 
-        //RF_SP_256x128 L1InstArray (
-        RF_SP_128x256 L1InstArray (
-            .A(address),
-            .D(write_data),
-            .CLK(clk_i),
-            .CEN(1'b0), // chip-enable active-low
-            .GWEN(write_enable), // write-enable active-low
-            .WEN({128{1'b0}}), // write-enable active-low (WEN[0]=LSB)
-            .EMA(3'b000),
-            .EMAW(2'b00),
-            .EMAS(1'b0),
-            .Q(RW0O_sram),
-            .STOV(1'b0),
-            .RET(1'b0)
-        );
+        
+    RF_2P_128x256_M1B2S2 L1InstArray (
+        .CENA(1'b0),
+	    .AA(address),
+	    .CENB(1'b0),
+	    .AB(address),
+	    .DB(write_data),
+	    .WENB({128{write_enable}}),
+	    .STOV(1'b0),
+	    .EMAA(3'b000),
+	    .EMASA(1'b0),
+	    .EMAB(3'b000),
+	    .RET(1'b0),
+	    .QNAPA(1'b0),
+	    .QNAPB(1'b0),
+	    .CLKA(clk_i),
+	    .CLKB(clk_i),
+	    .QA(RW0O_sram)
+    );
     
     assign data_o = RW0O_sram;
 `endif
