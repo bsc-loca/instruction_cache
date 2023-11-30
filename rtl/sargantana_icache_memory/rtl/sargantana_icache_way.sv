@@ -53,7 +53,7 @@ module sargantana_icache_way
 	    .CENB(1'b0),
 	    .AB(address),
 	    .DB(write_data),
-	    .WENB({128{write_enable}}),
+	    .WENB({256{write_enable}}),
 	    .STOV(1'b0),
 	    .EMAA(3'b000),
 	    .EMASA(1'b0),

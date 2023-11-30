@@ -23,7 +23,7 @@ module sargantana_itag_memory_sram
     input  logic                                   vbit_i     ,
     input  logic                                   flush_i    ,
     input  logic                   [TAG_WIDHT-1:0] data_i     ,
-    input  logic                  [ADDR_WIDHT-3:0] addr_i     ,
+    input  logic              [TAG_ADDR_WIDHT-1:0] addr_i     ,
     output logic [ICACHE_N_WAY-1:0][TAG_WIDHT-1:0] tag_way_o  , //- one for each way.
     output logic                [ICACHE_N_WAY-1:0] vbit_o       
 );
@@ -31,7 +31,7 @@ module sargantana_itag_memory_sram
 //- To build a memory of tags for each path.
 
 //Valid bit wires
-logic [ICACHE_DEPTH-1:0] vbit_vec [0:ICACHE_N_WAY-1];
+logic [TAG_DEPTH-1:0] vbit_vec [0:ICACHE_N_WAY-1];
 
 //--VALID bit vector
 genvar i;
@@ -56,7 +56,7 @@ endgenerate
   logic [107:0] write_mask, write_data, w_mask, w_data, mask;
   logic write_enable;
   logic chip_enable;
-  logic [ADDR_WIDHT-3:0] address;
+  logic [TAG_ADDR_WIDHT-1:0] address;
 
   // Tag array SRAM implementation
 
