@@ -16,6 +16,9 @@
 
 module sargantana_top_icache 
     import sargantana_icache_pkg::*;
+#(
+    parameter logic KILL_RESP   = 1'b1
+)
 (
     input  logic          clk_i              ,
     input  logic          rstn_i             ,
@@ -125,9 +128,12 @@ assign icache_resp_o.vaddr = {vpn_q,idx_q};
 logic icache_resp_valid ; 
 assign icache_resp_o.xcpt = mmu_tresp_q.xcpt && icache_resp_valid;
 
-// assign icache_resp_o.valid = icache_resp_valid && !ireq_kill_d;       
-assign icache_resp_o.valid = icache_resp_valid;       
-
+if (KILL_RESP) begin
+    assign icache_resp_o.valid = icache_resp_valid && !ireq_kill_d;
+end
+else begin
+    assign icache_resp_o.valid = icache_resp_valid;
+end
 //---------------------------------------------------------------------
 //------------------------------------------------------ IFILL request.
 
