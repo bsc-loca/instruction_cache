@@ -16,6 +16,9 @@
 
 module sargantana_icache_checker
     import sargantana_icache_pkg::*;
+#(
+    parameter logic LINES_256   = 1'b0
+)
 (
     input  logic                           cmp_enable_q     ,
     input  logic    [ICACHE_TAG_WIDTH-1:0] cline_tag_d      , //- From mmu, paddr.
@@ -52,11 +55,16 @@ function automatic logic [FETCH_WIDHT-1:0] chunk_sel(
     input logic offset
   );
     logic [FETCH_WIDHT-1:0] out;
-    unique case(offset)
-      1'b0:   out = data[(FETCH_WIDHT*1)-1 : FETCH_WIDHT*0];  
-      1'b1:   out = data[(FETCH_WIDHT*2)-1 : FETCH_WIDHT*1]; 
-      default: out = '0; 
-    endcase 
+    if (LINES_256) begin
+        assign out = data;
+    end
+    else begin
+        unique case(offset)
+          1'b0:   out = data[(FETCH_WIDHT*1)-1 : FETCH_WIDHT*0];  
+          1'b1:   out = data[(FETCH_WIDHT*2)-1 : FETCH_WIDHT*1]; 
+          default: out = '0; 
+        endcase 
+    end
     return out;
 endfunction : chunk_sel
 

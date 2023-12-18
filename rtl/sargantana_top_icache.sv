@@ -17,7 +17,8 @@
 module sargantana_top_icache 
     import sargantana_icache_pkg::*;
 #(
-    parameter logic KILL_RESP   = 1'b1
+    parameter logic KILL_RESP   = 1'b1,
+    parameter logic LINES_256   = 1'b0
 )
 (
     input  logic          clk_i              ,
@@ -226,7 +227,9 @@ sargantana_icache_replace_unit replace_unit(
 );
 
 
-sargantana_icache_checker ichecker(
+sargantana_icache_checker #(
+    .LINES_256          (LINES_256)
+) ichecker(
     .read_tags_i        ( way_tags            ),
     .cmp_enable_q       ( cmp_enable_q        ),
     .cline_tag_d        ( cline_tag_d         ),
