@@ -56,7 +56,7 @@ function automatic logic [FETCH_WIDHT-1:0] chunk_sel(
   );
     logic [FETCH_WIDHT-1:0] out;
     if (LINES_256) begin
-        assign out = data;
+        out = data;
     end
     else begin
         unique case(offset)
