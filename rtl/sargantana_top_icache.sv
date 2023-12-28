@@ -82,6 +82,8 @@ logic cmp_enable_q      ;
 logic treq_valid        ;
 logic valid_bit         ;
 logic valid_ifill_resp  ;
+logic is_flush_d        ;
+logic is_flush_q        ;
 
 logic ifill_req_was_sent_d ;
 logic ifill_req_was_sent_q ;

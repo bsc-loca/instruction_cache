@@ -41,7 +41,7 @@ module sargantana_icache_replace_unit
 
 );
 
-//logic inval_req;
+logic inval_req;
 logic lfsr_ena ;
 logic all_ways_valid ;
 
