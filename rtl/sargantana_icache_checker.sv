@@ -55,13 +55,13 @@ function automatic logic [FETCH_WIDHT-1:0] chunk_sel(
     input logic offset
   );
     logic [FETCH_WIDHT-1:0] out;
-    if (LINES_256) begin
+    if (LINES_256) begin    // 256b fetch
         out = data;
     end
-    else begin
+    else begin              // 128b fetch
         unique case(offset)
-          1'b0:   out = data[(FETCH_WIDHT*1)-1 : FETCH_WIDHT*0];  
-          1'b1:   out = data[(FETCH_WIDHT*2)-1 : FETCH_WIDHT*1]; 
+          1'b0:   out = {{128{1'b0}}, data[127 : 0]};
+          1'b1:   out = {{128{1'b0}}, data[255 : 128]};
           default: out = '0; 
         endcase 
     end
