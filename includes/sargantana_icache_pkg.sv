@@ -19,9 +19,9 @@ import drac_pkg::*;
 //------------------------------------------------ Global Configuration
 //- L1 instruction cache
 localparam int unsigned WORD_SIZE    = 64  ; //- Word size in a set.
-localparam int unsigned SET_WIDHT    = 256 ; //- Cache line
+localparam int unsigned SET_WIDHT    = 512 ; //- Cache line
 localparam int unsigned ASSOCIATIVE  = 4   ; //- Number of ways.
-localparam int unsigned ICACHE_DEPTH = 128 ; //- .
+localparam int unsigned ICACHE_DEPTH = 64 ; //- .
 
 localparam int unsigned ICACHE_N_WAY = ASSOCIATIVE  ; //- Number of ways.
 localparam int unsigned ICACHE_N_WAY_CLOG2 = $clog2( ICACHE_N_WAY );

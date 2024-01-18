@@ -140,7 +140,7 @@ end
 //---------------------------------------------------------------------
 //------------------------------------------------------ IFILL request.
 
-assign icache_ifill_req_o.paddr = {cline_tag_d,idx_q[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH],5'b0};
+assign icache_ifill_req_o.paddr = {cline_tag_d,idx_q[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH],6'b0};
 
 assign icache_ifill_req_o.valid = ifill_req_valid  && !ireq_kill_d ;
 

@@ -40,7 +40,7 @@ genvar i;
 generate
 for (i=0;i<ICACHE_N_WAY;i++) begin : tag_cmp
     assign cline_hit_o[i]  = (read_tags_i[i] == cline_tag_d) & way_valid_bits_i[i];
-    assign cline_sel[i]    = chunk_sel(data_rd_i[i],fetch_idx_i[0]);
+    assign cline_sel[i]    = chunk_sel(data_rd_i[i],fetch_idx_i);
 end
 endgenerate
 
@@ -52,16 +52,22 @@ sargantana_icache_tzc_idx tzc_idx (
 
 function automatic logic [FETCH_WIDHT-1:0] chunk_sel(
     input logic [255:0] data,
-    input logic offset
+    input logic [1:0] offset
   );
     logic [FETCH_WIDHT-1:0] out;
     if (LINES_256) begin    // 256b fetch
-        out = data;
+        unique case(offset)
+          2'b00,2'b01: out = data[255 : 0];
+          2'b10,2'b11: out = data[511 : 256];
+          default: out = '0; 
+        endcase 
     end
     else begin              // 128b fetch
         unique case(offset)
-          1'b0:   out = {{128{1'b0}}, data[127 : 0]};
-          1'b1:   out = {{128{1'b0}}, data[255 : 128]};
+          2'b00:   out = {{128{1'b0}}, data[127 : 0]};
+          2'b01:   out = {{128{1'b0}}, data[255 : 128]};
+          2'b10:   out = {{128{1'b0}}, data[383 : 256]};
+          2'b11:   out = {{128{1'b0}}, data[511 : 384]};
           default: out = '0; 
         endcase 
     end
