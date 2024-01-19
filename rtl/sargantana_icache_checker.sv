@@ -51,7 +51,7 @@ sargantana_icache_tzc_idx tzc_idx (
 );
 
 function automatic logic [FETCH_WIDHT-1:0] chunk_sel(
-    input logic [255:0] data,
+    input logic [WAY_WIDHT-1:0] data,
     input logic [1:0] offset
   );
     logic [FETCH_WIDHT-1:0] out;
