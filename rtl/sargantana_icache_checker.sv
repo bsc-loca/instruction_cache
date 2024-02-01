@@ -56,13 +56,24 @@ function automatic logic [FETCH_WIDHT-1:0] chunk_sel(
   );
     logic [FETCH_WIDHT-1:0] out;
     if (LINES_256) begin    // 256b fetch
+`ifdef ICACHE_32B
+        out = data[255 : 0];
+`else
         unique case(offset)
           2'b00,2'b01: out = data[255 : 0];
           2'b10,2'b11: out = data[511 : 256];
           default: out = '0; 
         endcase 
+`endif
     end
     else begin              // 128b fetch
+`ifdef ICACHE_32B
+        unique case(offset[0])
+          1'b0:   out = {{128{1'b0}}, data[127 : 0]};
+          1'b1:   out = {{128{1'b0}}, data[255 : 128]};
+          default: out = '0; 
+        endcase 
+`else
         unique case(offset)
           2'b00:   out = {{128{1'b0}}, data[127 : 0]};
           2'b01:   out = {{128{1'b0}}, data[255 : 128]};
@@ -70,6 +81,7 @@ function automatic logic [FETCH_WIDHT-1:0] chunk_sel(
           2'b11:   out = {{128{1'b0}}, data[511 : 384]};
           default: out = '0; 
         endcase 
+`endif
     end
     return out;
 endfunction : chunk_sel

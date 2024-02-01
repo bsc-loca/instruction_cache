@@ -120,7 +120,7 @@ assign mmu_tresp_d = mmu_tresp_i;
 
 //- Split virtual address into index and offset to address cache arrays.
 assign vaddr_index = valid_inv ? ifill_resp_i.inv.paddr[ICACHE_IDX_WIDTH:1] : 
-                                 idx_d[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
+                                 {vpn_d,idx_d}[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
                      
 assign cline_tag_d  = mmu_tresp_q.ppn ;
                                                                 
@@ -140,7 +140,7 @@ end
 //---------------------------------------------------------------------
 //------------------------------------------------------ IFILL request.
 
-assign icache_ifill_req_o.paddr = {cline_tag_d,idx_q[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH],6'b0};
+assign icache_ifill_req_o.paddr = {cline_tag_d,idx_q[11:ICACHE_OFFSET_WIDTH],{ICACHE_OFFSET_WIDTH{1'b0}}};
 
 assign icache_ifill_req_o.valid = ifill_req_valid  && !ireq_kill_d ;
 

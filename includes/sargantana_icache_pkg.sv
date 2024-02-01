@@ -17,11 +17,19 @@ package sargantana_icache_pkg;
 import drac_pkg::*;
 
 //------------------------------------------------ Global Configuration
-//- L1 instruction cache
-localparam int unsigned WORD_SIZE    = 64  ; //- Word size in a set.
-localparam int unsigned SET_WIDHT    = 512 ; //- Cache line
-localparam int unsigned ASSOCIATIVE  = 4   ; //- Number of ways.
-localparam int unsigned ICACHE_DEPTH = 64 ; //- .
+
+`ifdef ICACHE_32B
+    localparam int unsigned ICACHE_MEM_BLOCK = 32 ; //32 Bytes
+`else
+    localparam int unsigned ICACHE_MEM_BLOCK = 64 ; //64 Bytes
+`endif 
+localparam int unsigned ICACHE_SIZE  = 16  ; // Total size in KB 
+localparam int unsigned ASSOCIATIVE  = 4   ; // Associativity
+
+//------------------------------------------------
+localparam int unsigned WORD_SIZE    = 64                 ; //- Word size in a set.
+localparam int unsigned SET_WIDHT    = ICACHE_MEM_BLOCK*8 ; //- Cache line
+localparam int unsigned ICACHE_DEPTH = (((ICACHE_SIZE*1024)/ASSOCIATIVE)/ICACHE_MEM_BLOCK) ;
 
 localparam int unsigned ICACHE_N_WAY = ASSOCIATIVE  ; //- Number of ways.
 localparam int unsigned ICACHE_N_WAY_CLOG2 = $clog2( ICACHE_N_WAY );
