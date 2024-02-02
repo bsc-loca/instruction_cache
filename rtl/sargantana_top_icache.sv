@@ -57,6 +57,7 @@ logic     [ICACHE_N_WAY-1:0] cline_hit       ;
 logic [ICACHE_N_WAY-1:0][TAG_WIDHT-1:0] way_tags     ;
 logic [ICACHE_N_WAY-1:0][WAY_WIDHT-1:0] cline_data_rd;
 
+logic [VADDR_SIZE-1:0] vaddr_in;  // virtual address out
 
 drac_pkg::icache_idx_t idx_d ;
 drac_pkg::icache_idx_t idx_q ;
@@ -111,6 +112,7 @@ assign ireq_kill_d = lagarto_ireq_i.kill ;
 //vaddr keeps available during all processes.
 assign vpn_d = ( lagarto_ireq_i.valid ) ? {lagarto_ireq_i.vpn} : vpn_q;
 assign idx_d = ( lagarto_ireq_i.valid ) ? {lagarto_ireq_i.idx} : idx_q;
+assign vaddr_in = {vpn_d,idx_d};
                                                       
 //assign icache_treq_o.vpn = vpn_d;
 assign icache_treq_o.vpn = vpn_d;
@@ -120,7 +122,7 @@ assign mmu_tresp_d = mmu_tresp_i;
 
 //- Split virtual address into index and offset to address cache arrays.
 assign vaddr_index = valid_inv ? ifill_resp_i.inv.paddr[ICACHE_IDX_WIDTH:1] : 
-                                 {vpn_d,idx_d}[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
+                                 vaddr_in[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
                      
 assign cline_tag_d  = mmu_tresp_q.ppn ;
                                                                 
