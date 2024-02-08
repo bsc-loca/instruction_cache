@@ -14,7 +14,6 @@
 
 
 module sargantana_icache_way 
-    import sargantana_icache_pkg::*;
 #(
     parameter int unsigned ICACHE_DEPTH = 64,
     parameter int unsigned SET_WIDHT    = 32*8,

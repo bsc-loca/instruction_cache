@@ -19,7 +19,6 @@
 //- Valid bit invalidation and replacement strategy
 
 module sargantana_icache_replace_unit 
-    import sargantana_icache_pkg::*;
 #(
     parameter int unsigned ICACHE_N_WAY     = 4,
     parameter int unsigned ICACHE_IDX_WIDTH = 6

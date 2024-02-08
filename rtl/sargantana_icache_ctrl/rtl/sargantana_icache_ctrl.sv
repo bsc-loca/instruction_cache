@@ -15,7 +15,6 @@
 
 
 module sargantana_icache_ctrl 
-    import sargantana_icache_pkg::*;
 #(
     parameter int   ICACHE_N_WAY = 4
 
@@ -54,6 +53,16 @@ module sargantana_icache_ctrl
     output logic replay_valid_o,
     output logic flush_en_o                 
 );                                          
+
+typedef enum logic[2:0] {NO_REQ, 
+                         READ, 
+                         MISS, 
+                         TLB_MISS, 
+                         REPLAY, 
+                         KILL,
+                         REPLAY_TLB,
+                         KILL_TLB
+                     } ictrl_state_t;
 
 logic new_request;
 logic is_hit_or_excpt;

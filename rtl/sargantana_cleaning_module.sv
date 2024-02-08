@@ -14,7 +14,6 @@
 
 
 module sargantana_cleaning_module
-    import sargantana_icache_pkg::*;
 (
     input  logic                    clk_i           ,
     input  logic                    rstn_i       ,

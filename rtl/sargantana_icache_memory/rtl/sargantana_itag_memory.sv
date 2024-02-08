@@ -15,7 +15,6 @@
 
 
 module sargantana_itag_memory
-    import sargantana_icache_pkg::*;
 #(
     parameter int unsigned ICACHE_N_WAY     = 4,
     parameter int unsigned TAG_DEPTH        = 64,

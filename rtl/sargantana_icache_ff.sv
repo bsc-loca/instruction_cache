@@ -16,7 +16,6 @@
 
 
 module sargantana_icache_ff
-    import sargantana_icache_pkg::*;
 #(
     parameter int unsigned ICACHE_N_WAY     = 4,
     parameter int unsigned PPN_BIT_SIZE     = 20,

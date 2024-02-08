@@ -16,7 +16,6 @@
 //`include "../../../includes/drac_config.v"
 
 module sargantana_top_memory
-    import sargantana_icache_pkg::*;
 #(
     parameter int unsigned ICACHE_DEPTH     = 64,
     parameter int unsigned ICACHE_N_WAY     = 4,

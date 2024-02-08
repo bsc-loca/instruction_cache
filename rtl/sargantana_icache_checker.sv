@@ -15,7 +15,6 @@
 
 
 module sargantana_icache_checker
-    import sargantana_icache_pkg::*;
 #(
     parameter logic LINES_256   = 1'b0,
 

@@ -17,7 +17,6 @@
 
 // A trailing zero counter
 module sargantana_icache_tzc_idx
-  import sargantana_icache_pkg::*;
 #(
   parameter int unsigned ICACHE_N_WAY     = 4
 )
