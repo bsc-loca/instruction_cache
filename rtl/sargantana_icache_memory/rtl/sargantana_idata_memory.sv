@@ -17,6 +17,12 @@
 //Build the ways.
 module sargantana_idata_memory 
     import sargantana_icache_pkg::*;
+#(
+    parameter int unsigned ICACHE_DEPTH = 64,
+    parameter int unsigned ICACHE_N_WAY = 4,
+    parameter int unsigned SET_WIDHT    = 32*8,
+    parameter int unsigned ADDR_WIDHT   = 6
+)
 (
     input  logic                                   clk_i         ,
     input  logic                                   rstn_i        ,
@@ -31,7 +37,11 @@ module sargantana_idata_memory
 genvar i;
 generate
 for ( i=0; i<ICACHE_N_WAY; i++ )begin:n_way
-sargantana_icache_way way(
+sargantana_icache_way #(
+    .ICACHE_DEPTH   ( ICACHE_DEPTH  ),
+    .SET_WIDHT      ( SET_WIDHT     ),
+    .ADDR_WIDHT     ( ADDR_WIDHT    )
+) way(
     .clk_i       ( clk_i          ),
     .rstn_i      ( rstn_i         ),
     .req_i       ( req_i[i]       ),

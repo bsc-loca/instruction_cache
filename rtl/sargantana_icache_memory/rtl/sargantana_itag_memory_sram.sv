@@ -15,6 +15,12 @@
 
 module sargantana_itag_memory_sram
   import sargantana_icache_pkg::*;
+#(
+    parameter int unsigned ICACHE_N_WAY     = 4,
+    parameter int unsigned TAG_DEPTH        = 64,
+    parameter int unsigned TAG_ADDR_WIDHT   = $clog2( TAG_DEPTH ),
+    parameter int unsigned TAG_WIDHT        = 20
+)
 (
     input  logic                                   clk_i      ,
     input  logic                                   rstn_i     ,

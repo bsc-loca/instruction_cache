@@ -16,6 +16,12 @@
 
 module sargantana_itag_memory
     import sargantana_icache_pkg::*;
+#(
+    parameter int unsigned ICACHE_N_WAY     = 4,
+    parameter int unsigned TAG_DEPTH        = 64,
+    parameter int unsigned TAG_ADDR_WIDHT   = $clog2( TAG_DEPTH ),
+    parameter int unsigned TAG_WIDHT        = 20
+)
 (
     input  logic                                   clk_i      ,
     input  logic                                   rstn_i     ,
@@ -35,7 +41,11 @@ module sargantana_itag_memory
 genvar i;
 generate
 for ( i=0; i<ICACHE_N_WAY; i++ )begin:tag_way
-sargantana_tag_way_memory tag_way (
+sargantana_tag_way_memory #(
+    .TAG_DEPTH      ( TAG_DEPTH      ),
+    .TAG_ADDR_WIDHT ( TAG_ADDR_WIDHT ),
+    .TAG_WIDHT      ( TAG_WIDHT      )
+) tag_way (
     .clk_i   ( clk_i        ),
     .rstn_i  ( rstn_i       ),
     .req_i   ( req_i[i]     ),

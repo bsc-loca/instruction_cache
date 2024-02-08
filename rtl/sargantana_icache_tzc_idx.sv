@@ -18,9 +18,12 @@
 // A trailing zero counter
 module sargantana_icache_tzc_idx
   import sargantana_icache_pkg::*;
+#(
+  parameter int unsigned ICACHE_N_WAY     = 4
+)
 (
   input  logic         [ICACHE_N_WAY-1:0] in_i          ,
-  output logic [ICACHE_N_WAY_CLOG2-1:0] way_o   
+  output logic [$clog2(ICACHE_N_WAY)-1:0] way_o   
 );
 
 // The above solution gives too many warnings, we should opt for a decoder

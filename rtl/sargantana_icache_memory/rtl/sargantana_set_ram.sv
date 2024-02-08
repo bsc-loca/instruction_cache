@@ -16,6 +16,11 @@
 /* Memory used to build a set*/
 module sargantana_set_ram
     import sargantana_icache_pkg::*;
+#(
+    parameter int unsigned ICACHE_DEPTH = 64,
+    parameter int unsigned SET_WIDHT    = 32*8,
+    parameter int unsigned ADDR_WIDHT   = 6
+)
 (
     input  logic                  clk_i       ,
     input  logic                  rstn_i      ,

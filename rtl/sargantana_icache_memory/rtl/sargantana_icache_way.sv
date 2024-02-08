@@ -15,6 +15,11 @@
 
 module sargantana_icache_way 
     import sargantana_icache_pkg::*;
+#(
+    parameter int unsigned ICACHE_DEPTH = 64,
+    parameter int unsigned SET_WIDHT    = 32*8,
+    parameter int unsigned ADDR_WIDHT   = 6
+)
 (
     input  logic                  clk_i      ,
     input  logic                  rstn_i     ,
@@ -26,7 +31,11 @@ module sargantana_icache_way
 );
 
 `ifndef SRAM_IP
-    sargantana_set_ram sram(
+    sargantana_set_ram #(
+        .ICACHE_DEPTH   ( ICACHE_DEPTH  ),
+        .SET_WIDHT      ( SET_WIDHT     ),
+        .ADDR_WIDHT     ( ADDR_WIDHT    )
+    ) sram(
         .clk_i (clk_i ),
         .rstn_i(rstn_i),
         .req_i (req_i ),

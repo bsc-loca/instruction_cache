@@ -17,6 +17,9 @@
 // Linear feedback shift register 8bit (LFSR)
 module sargantana_icache_lfsr 
     import sargantana_icache_pkg::*;
+#(
+    parameter int unsigned ICACHE_N_WAY     = 4
+)
 (
     input  logic                            clk_i,
     input  logic                            rst_ni,

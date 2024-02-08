@@ -20,6 +20,11 @@
 
 module sargantana_icache_replace_unit 
     import sargantana_icache_pkg::*;
+#(
+    parameter int unsigned ICACHE_N_WAY     = 4,
+    parameter int unsigned ICACHE_IDX_WIDTH = 6
+
+)
 (
     input                                   clk_i            ,
     input                                   rstn_i           ,
@@ -104,7 +109,9 @@ assign data_req_valid_o   = (cache_rd_ena_i ) ?                  '1 :
 
 
 // generate random cacheline index
-sargantana_icache_lfsr lfsr (
+sargantana_icache_lfsr #(
+    .ICACHE_N_WAY   ( ICACHE_N_WAY )
+) lfsr (
     .clk_i          ( clk_i         ),
     .rst_ni         ( rstn_i        ),
     .en_i           ( lfsr_ena      ),
@@ -113,7 +120,9 @@ sargantana_icache_lfsr lfsr (
 
 
 // find invalid cache line
-sargantana_icache_tzc tzc (
+sargantana_icache_tzc #(
+    .ICACHE_N_WAY   ( ICACHE_N_WAY )
+) tzc (
     .in_i           ( ~way_valid_bits_i  ),
     .inval_way_o    (  a_invalid_way     ),
     .empty_o        (  all_ways_valid    )

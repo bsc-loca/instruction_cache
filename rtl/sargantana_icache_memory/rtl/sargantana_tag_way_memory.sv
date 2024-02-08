@@ -16,6 +16,11 @@
 
 module sargantana_tag_way_memory
     import sargantana_icache_pkg::*;
+#(
+    parameter int unsigned TAG_DEPTH        = 64,
+    parameter int unsigned TAG_ADDR_WIDHT   = $clog2( TAG_DEPTH ),
+    parameter int unsigned TAG_WIDHT        = 20
+)
 (
     input  logic                  clk_i ,
     input  logic                  rstn_i,

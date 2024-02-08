@@ -17,6 +17,16 @@
 
 module sargantana_top_memory
     import sargantana_icache_pkg::*;
+#(
+    parameter int unsigned ICACHE_DEPTH     = 64,
+    parameter int unsigned ICACHE_N_WAY     = 4,
+    parameter int unsigned TAG_DEPTH        = 64,
+    parameter int unsigned TAG_ADDR_WIDHT   = $clog2( TAG_DEPTH ),
+    parameter int unsigned SET_WIDHT        = 32*8,
+    parameter int unsigned WAY_WIDHT        = SET_WIDHT,
+    parameter int unsigned TAG_WIDHT        = 20,
+    parameter int unsigned ADDR_WIDHT       = 6
+)
 (
     input  logic                    clk_i        ,
     input  logic                    rstn_i       ,
@@ -39,7 +49,12 @@ module sargantana_top_memory
 
 
 //- Data memory
-sargantana_idata_memory idata_memory(
+sargantana_idata_memory #(
+    .ICACHE_DEPTH   ( ICACHE_DEPTH  ),
+    .ICACHE_N_WAY   ( ICACHE_N_WAY  ),
+    .SET_WIDHT      ( SET_WIDHT     ),
+    .ADDR_WIDHT     ( ADDR_WIDHT    )
+) idata_memory(
     .clk_i          ( clk_i         ),
     .rstn_i         ( rstn_i        ),
     .req_i          ( data_req_i    ),
@@ -51,7 +66,12 @@ sargantana_idata_memory idata_memory(
 
 //- Tags memory
 `ifndef SRAM_IP
-    sargantana_itag_memory itag_memory(
+    sargantana_itag_memory #(
+        .ICACHE_N_WAY   ( ICACHE_N_WAY   ),
+        .TAG_DEPTH      ( TAG_DEPTH      ),
+        .TAG_ADDR_WIDHT ( TAG_ADDR_WIDHT ),
+        .TAG_WIDHT      ( TAG_WIDHT      )
+    ) itag_memory(
         .clk_i      ( clk_i       ),
         .rstn_i     ( rstn_i      ),
         .req_i      ( tag_req_i   ),
@@ -64,7 +84,12 @@ sargantana_idata_memory idata_memory(
         .vbit_o     ( valid_bit_o )
     );
 `else
-    sargantana_itag_memory_sram itag_memory(
+    sargantana_itag_memory_sram #(
+        .ICACHE_N_WAY   ( ICACHE_N_WAY   ),
+        .TAG_DEPTH      ( TAG_DEPTH      ),
+        .TAG_ADDR_WIDHT ( TAG_ADDR_WIDHT ),
+        .TAG_WIDHT      ( TAG_WIDHT      )
+    ) itag_memory(
         .clk_i      ( clk_i       ),
         .rstn_i     ( rstn_i      ),
         .req_i      ( tag_req_i   ),

@@ -15,28 +15,90 @@
 
 
 module sargantana_top_icache 
-    import sargantana_icache_pkg::*;
 #(
-    parameter logic KILL_RESP   = 1'b1,
-    parameter logic LINES_256   = 1'b0
+    parameter logic         KILL_RESP           = 1'b1,
+    parameter logic         LINES_256           = 1'b0,
+
+    parameter int unsigned  ICACHE_MEM_BLOCK    = 64,
+    parameter int unsigned  VADDR_SIZE          = 39,   //! Virtual address size.
+    parameter int unsigned  PADDR_SIZE          = 40,   //! Physical address size.
+
+    parameter int unsigned  ADDR_SIZE           = 40,   //! Maximum between physical address size and virtual address size.
+    parameter int unsigned  IDX_BITS_SIZE       = 12,   //! Bits used for idx
+    parameter int unsigned  VPN_BITS_SIZE       = ADDR_SIZE - IDX_BITS_SIZE,    //! Bits used for vpn
+
+    parameter int unsigned  FETCH_WIDHT         = 128,
+
+    localparam int unsigned ICACHE_SIZE         = 16,   // Total size in KB 
+    localparam int unsigned ASSOCIATIVE         = 4,    // Associativity
+
+    localparam int unsigned WORD_SIZE           = 64,                                                       //- Word size in a set.
+    localparam int unsigned SET_WIDHT           = ICACHE_MEM_BLOCK*8,                                       //- Cache line
+    localparam int unsigned ICACHE_DEPTH        = (((ICACHE_SIZE*1024)/ASSOCIATIVE)/ICACHE_MEM_BLOCK),
+
+    localparam int unsigned ICACHE_N_WAY        = ASSOCIATIVE,                                              //- Number of ways.
+    localparam int unsigned ICACHE_N_WAY_CLOG2  = $clog2( ICACHE_N_WAY ),
+    localparam int unsigned TAG_DEPTH           = ICACHE_DEPTH,                                             //- .
+    localparam int unsigned ADDR_WIDHT          = $clog2( ICACHE_DEPTH ),                                   //- icache Addr vector
+    localparam int unsigned TAG_ADDR_WIDHT      = $clog2( TAG_DEPTH ),                                      //- 
+    localparam int unsigned WAY_WIDHT           = SET_WIDHT,                                                //- 
+
+    localparam int unsigned ICACHE_OFFSET_WIDTH = $clog2(SET_WIDHT/8),                                      // align to 64bytes
+    localparam int unsigned ICACHE_INDEX_WIDTH  = $clog2(ICACHE_DEPTH) + ICACHE_OFFSET_WIDTH,
+
+    localparam int unsigned BLOCK_ADDR_SIZE     = ADDR_SIZE - ICACHE_OFFSET_WIDTH,
+    localparam int unsigned PPN_BIT_SIZE        = ADDR_SIZE - ICACHE_INDEX_WIDTH,
+    localparam int unsigned TAG_WIDHT           = ADDR_SIZE - ICACHE_INDEX_WIDTH,                           //- Tag size.
+
+    localparam int unsigned ICACHE_TAG_WIDTH    = TAG_WIDHT,
+    localparam int unsigned ICACHE_IDX_WIDTH    = ADDR_WIDHT
+
 )
 (
-    input  logic          clk_i              ,
-    input  logic          rstn_i             ,
-    input  logic          flush_i            , 
+    input  logic                            clk_i                       ,
+    input  logic                            rstn_i                      ,
+    input  logic                            flush_i                     , 
+
     // Core interface                           
-    input  ireq_i_t       lagarto_ireq_i     , //- From Lagarto.
-    output iresp_o_t      icache_resp_o      , //- To Lagarto.
+    // From Core
+    input  logic                            lagarto_ireq_valid_i        ,   // we request a new word
+    input  logic                            lagarto_ireq_kill_i         ,   // kill the current request
+    input  logic [IDX_BITS_SIZE-1:0]        lagarto_ireq_idx_i          ,
+    input  logic [VPN_BITS_SIZE-1:0]        lagarto_ireq_vpn_i          ,  
+
+    // To Core
+    output logic                            icache_resp_ready_o         ,  // icache is ready
+    output logic                            icache_resp_valid_o         ,  // signals a valid read
+    output logic [FETCH_WIDHT-1 :0]         icache_resp_data_o          ,  // 2+ cycle out: tag
+    output logic [VADDR_SIZE-1:0]           icache_resp_vaddr_o         ,  // virtual address out
+    output logic                            icache_resp_xcpt_o          ,  // we've encountered an exception
+
     // MMU interface                         
-    input  tresp_i_t      mmu_tresp_i        , //- From MMU.
-    output treq_o_t       icache_treq_o      , //- To MMU.
+    //- From MMU.
+    input  logic                            mmu_tresp_miss_i            ,
+    input  logic                            mmu_tresp_ptw_v_i           ,  // ptw response valid
+    input  logic [PPN_BIT_SIZE-1:0]         mmu_tresp_ppn_i             ,  // physical address in
+    input  logic                            mmu_tresp_xcpt_i            ,  // exception occurred during fetch
+
+    //- To MMU
+    output logic                            icache_treq_valid_o         ,       // address translation request
+    output logic [VPN_BITS_SIZE-1:0]        icache_treq_vpn_o           ,  
+    
     // iFill interface
-    input  ifill_resp_i_t ifill_resp_i       , //- From upper levels.
-    output ifill_req_o_t  icache_ifill_req_o , //- To upper levels. 
+    input  logic                            ifill_resp_valid_i          , // Valid response
+    input  logic                            ifill_resp_ack_i            , // IFILL request was received
+    input  logic [SET_WIDHT-1:0]            ifill_resp_data_i           , // Full cache line
+    input  logic [1:0]                      ifill_resp_beat_i           ,
+    input  logic                            ifill_resp_inv_valid_i      , //- valid invalidation and
+    input  logic [ICACHE_INDEX_WIDTH-1:0]   ifill_resp_inv_paddr_i      , //- index to invalidate
+
+    output logic                            icache_ifill_req_valid_o    ,  // valid request
+    output logic [$clog2(ICACHE_N_WAY)-1:0] icache_ifill_req_way_o      ,  // way to replace
+    output logic [PADDR_SIZE-1:0]           icache_ifill_req_paddr_o    ,  // physical address
 
     // PMU
-    output logic imiss_time_pmu_o            , 
-    output logic imiss_kill_pmu_o           
+    output logic                            imiss_time_pmu_o            , 
+    output logic                            imiss_kill_pmu_o           
 );
 
 logic     [ICACHE_TAG_WIDTH-1:0] cline_tag_d      ; //- Cache-line tag
@@ -59,10 +121,10 @@ logic [ICACHE_N_WAY-1:0][WAY_WIDHT-1:0] cline_data_rd;
 
 logic [VADDR_SIZE-1:0] vaddr_in;  // virtual address out
 
-drac_pkg::icache_idx_t idx_d ;
-drac_pkg::icache_idx_t idx_q ;
-drac_pkg::icache_vpn_t vpn_d ;
-drac_pkg::icache_vpn_t vpn_q ;
+logic [IDX_BITS_SIZE-1:0]   idx_d ;
+logic [IDX_BITS_SIZE-1:0]   idx_q ;
+logic [VPN_BITS_SIZE-1:0]   vpn_d ;
+logic [VPN_BITS_SIZE-1:0]   vpn_q ;
 
 logic ifill_req_valid   ;
 logic flush_d           ;
@@ -96,64 +158,74 @@ logic block_invalidate          ;
 logic valid_inv                 ;
 logic ctrl_ready                ;
 
-tresp_i_t  mmu_tresp_d;  
-tresp_i_t  mmu_tresp_q; 
+logic                    mmu_tresp_miss_d;
+logic                    mmu_tresp_ptw_v_d;
+logic [PPN_BIT_SIZE-1:0] mmu_tresp_ppn_d;
+logic                    mmu_tresp_xcpt_d;
+    
+logic                    mmu_tresp_miss_q;
+logic                    mmu_tresp_ptw_v_q;
+logic [PPN_BIT_SIZE-1:0] mmu_tresp_ppn_q;
+logic                    mmu_tresp_xcpt_q;
 
 // a valid invalidation from L2
-assign valid_inv = ifill_resp_i.valid & ifill_resp_i.inv.valid ;
+assign valid_inv = ifill_resp_valid_i & ifill_resp_inv_valid_i ;
 
 //- It can only accept a request from the core if the cache is free.
-assign valid_ireq_d = lagarto_ireq_i.valid || replay_valid ;
+assign valid_ireq_d = lagarto_ireq_valid_i || replay_valid ;
 
 assign is_flush_d = flush_i;
 
-assign ireq_kill_d = lagarto_ireq_i.kill ; 
+assign ireq_kill_d = lagarto_ireq_kill_i ; 
 
 //vaddr keeps available during all processes.
-assign vpn_d = ( lagarto_ireq_i.valid ) ? {lagarto_ireq_i.vpn} : vpn_q;
-assign idx_d = ( lagarto_ireq_i.valid ) ? {lagarto_ireq_i.idx} : idx_q;
+assign vpn_d = ( lagarto_ireq_valid_i ) ? {lagarto_ireq_vpn_i} : vpn_q;
+assign idx_d = ( lagarto_ireq_valid_i ) ? {lagarto_ireq_idx_i} : idx_q;
 assign vaddr_in = {vpn_d,idx_d};
                                                       
-//assign icache_treq_o.vpn = vpn_d;
-assign icache_treq_o.vpn = vpn_d;
-assign icache_treq_o.valid = treq_valid || valid_ireq_d ;
+//assign icache_treq_vpn_o = vpn_d;
+assign icache_treq_vpn_o = vpn_d;
+assign icache_treq_valid_o = treq_valid || valid_ireq_d ;
 
-assign mmu_tresp_d = mmu_tresp_i;
+assign mmu_tresp_miss_d     = mmu_tresp_miss_i;
+assign mmu_tresp_ptw_v_d    = mmu_tresp_ptw_v_i;
+assign mmu_tresp_ppn_d      = mmu_tresp_ppn_i;
+assign mmu_tresp_xcpt_d     = mmu_tresp_xcpt_i;
 
 //- Split virtual address into index and offset to address cache arrays.
-assign vaddr_index = valid_inv ? ifill_resp_i.inv.paddr[ICACHE_IDX_WIDTH:1] : 
+assign vaddr_index = valid_inv ? ifill_resp_inv_paddr_i[ICACHE_IDX_WIDTH:1] : 
                                  vaddr_in[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
                      
-assign cline_tag_d  = mmu_tresp_q.ppn ;
+assign cline_tag_d  = mmu_tresp_ppn_q ;
                                                                 
 // vaddr in fly 
-assign icache_resp_o.vaddr = {vpn_q,idx_q};
+assign icache_resp_vaddr_o = {vpn_q,idx_q};
 
 // pass exception through
 logic icache_resp_valid ; 
-assign icache_resp_o.xcpt = mmu_tresp_q.xcpt && icache_resp_valid;
+assign icache_resp_xcpt_o = mmu_tresp_xcpt_q && icache_resp_valid;
 
 if (KILL_RESP) begin
-    assign icache_resp_o.valid = icache_resp_valid && !ireq_kill_d;
+    assign icache_resp_valid_o = icache_resp_valid && !ireq_kill_d;
 end
 else begin
-    assign icache_resp_o.valid = icache_resp_valid;
+    assign icache_resp_valid_o = icache_resp_valid;
 end
 //---------------------------------------------------------------------
 //------------------------------------------------------ IFILL request.
 
-assign icache_ifill_req_o.paddr = {cline_tag_d,idx_q[11:ICACHE_OFFSET_WIDTH],{ICACHE_OFFSET_WIDTH{1'b0}}};
+assign icache_ifill_req_paddr_o = {cline_tag_d,idx_q[11:ICACHE_OFFSET_WIDTH],{ICACHE_OFFSET_WIDTH{1'b0}}};
 
-assign icache_ifill_req_o.valid = ifill_req_valid  && !ireq_kill_d ;
+assign icache_ifill_req_valid_o = ifill_req_valid  && !ireq_kill_d ;
 
 //-----------------------------------------------------------------------
-assign valid_ifill_resp = ifill_resp_i.valid & ~ifill_resp_i.inv.valid;
+assign valid_ifill_resp = ifill_resp_valid_i & ~ifill_resp_inv_valid_i;
 
-assign ifill_req_was_sent_d = icache_ifill_req_o.valid | 
+assign ifill_req_was_sent_d = icache_ifill_req_valid_o | 
                               (ifill_req_was_sent_q & ~valid_ifill_resp);
 
-assign ifill_process_started_d = ifill_resp_i.valid ;
-//assign ifill_process_started_d = ((ifill_resp_i.beat == 2'b00) && ifill_resp_i.valid) ? 1'b1 :
+assign ifill_process_started_d = ifill_resp_valid_i ;
+//assign ifill_process_started_d = ((ifill_resp_beat_i == 2'b00) && ifill_resp_valid_i) ? 1'b1 :
 //                                  (valid_ifill_resp) ? 1'b0 : ifill_process_started_q;
 
 assign block_invalidate = ifill_process_started_q && ireq_kill_d ; 
@@ -162,7 +234,9 @@ assign valid_bit = valid_inv ? 1'b0 : tag_we_valid & ~ireq_kill_d & ~ireq_kill_q
                                          
 assign tag_we = tag_we_valid ;
 
-sargantana_icache_ctrl  icache_ctrl (
+sargantana_icache_ctrl #(
+    .ICACHE_N_WAY       ( ICACHE_N_WAY              )
+)  icache_ctrl (
     .clk_i              ( clk_i                     ),
     .rstn_i             ( rstn_i                    ),
     .cache_enable_i     ( 1'b1                      ),
@@ -177,9 +251,9 @@ sargantana_icache_ctrl  icache_ctrl (
     .ireq_kill_d        ( ireq_kill_d               ),
     .iresp_ready_o      ( ctrl_ready                ),
     .iresp_valid_o      ( icache_resp_valid         ),
-    .mmu_miss_i         ( mmu_tresp_q.miss          ),
-    .mmu_ptw_valid_i    ( mmu_tresp_q.ptw_v         ),
-    .mmu_ex_valid_i     ( mmu_tresp_q.xcpt          ),
+    .mmu_miss_i         ( mmu_tresp_miss_q          ),
+    .mmu_ptw_valid_i    ( mmu_tresp_ptw_v_q         ),
+    .mmu_ex_valid_i     ( mmu_tresp_xcpt_q          ),
     .treq_valid_o       ( treq_valid                ),
     .valid_ifill_resp_i ( valid_ifill_resp          ),
     .ifill_resp_valid_i ( valid_ifill_resp          ),
@@ -192,26 +266,38 @@ sargantana_icache_ctrl  icache_ctrl (
     .flush_en_o         (flush_enable               )        
 );                                          
 
-assign icache_resp_o.ready = ctrl_ready &~ valid_inv ;
+assign icache_resp_ready_o = ctrl_ready &~ valid_inv ;
 
-sargantana_top_memory icache_memory(
-    .clk_i       ( clk_i  ),
-    .rstn_i      ( rstn_i ),
-    .tag_req_i   ( tag_req_valid  ),
-    .data_req_i  ( data_req_valid ),
-    .tag_we_i    ( tag_we  ),
-    .data_we_i   ( cache_wr_ena ),
-    .flush_en_i  ( is_flush_d ),
-    .valid_bit_i ( valid_bit),
-    .cline_i     ( ifill_resp_i.data ),
-    .tag_i       ( cline_tag_q ),
-    .addr_i      ( addr_valid ),
-    .tag_way_o   ( way_tags  ), 
-    .cline_way_o ( cline_data_rd ), 
-    .valid_bit_o ( way_valid_bits )  
+sargantana_top_memory #(
+    .ICACHE_DEPTH   ( ICACHE_DEPTH   ),
+    .ICACHE_N_WAY   ( ICACHE_N_WAY   ),
+    .TAG_DEPTH      ( TAG_DEPTH      ),
+    .TAG_ADDR_WIDHT ( TAG_ADDR_WIDHT ),
+    .SET_WIDHT      ( SET_WIDHT      ),
+    .WAY_WIDHT      ( WAY_WIDHT      ),
+    .TAG_WIDHT      ( TAG_WIDHT      ),
+    .ADDR_WIDHT     ( ADDR_WIDHT     )
+) icache_memory(
+    .clk_i          ( clk_i  ),
+    .rstn_i         ( rstn_i ),
+    .tag_req_i      ( tag_req_valid  ),
+    .data_req_i     ( data_req_valid ),
+    .tag_we_i       ( tag_we  ),
+    .data_we_i      ( cache_wr_ena ),
+    .flush_en_i     ( is_flush_d ),
+    .valid_bit_i    ( valid_bit),
+    .cline_i        ( ifill_resp_data_i ),
+    .tag_i          ( cline_tag_q ),
+    .addr_i         ( addr_valid ),
+    .tag_way_o      ( way_tags  ), 
+    .cline_way_o    ( cline_data_rd ), 
+    .valid_bit_o    ( way_valid_bits )  
 );
 
-sargantana_icache_replace_unit replace_unit(
+sargantana_icache_replace_unit #(
+    .ICACHE_N_WAY       ( ICACHE_N_WAY ),
+    .ICACHE_IDX_WIDTH   ( ICACHE_IDX_WIDTH )
+) replace_unit(
     .clk_i          ( clk_i            ),
     .rstn_i         ( rstn_i           ),
     .inval_i        ( valid_inv        ),
@@ -225,14 +311,19 @@ sargantana_icache_replace_unit replace_unit(
     .cmp_en_q       ( cmp_enable_q       ),
     .way_to_replace_q ( way_to_replace_q      ),
     .way_to_replace_d ( way_to_replace_d      ),
-    .way_to_replace_o ( icache_ifill_req_o.way ),
+    .way_to_replace_o ( icache_ifill_req_way_o ),
     .data_req_valid_o  ( data_req_valid        ),
     .tag_req_valid_o  ( tag_req_valid        )
 );
 
 
 sargantana_icache_checker #(
-    .LINES_256          (LINES_256)
+    .LINES_256          ( LINES_256),
+
+    .ICACHE_N_WAY       ( ICACHE_N_WAY        ),
+    .TAG_WIDHT          ( TAG_WIDHT           ),
+    .WAY_WIDHT          ( WAY_WIDHT           ),
+    .FETCH_WIDHT        ( FETCH_WIDHT         )
 ) ichecker(
     .read_tags_i        ( way_tags            ),
     .cmp_enable_q       ( cmp_enable_q        ),
@@ -241,12 +332,18 @@ sargantana_icache_checker #(
     .way_valid_bits_i   ( way_valid_bits      ),
     .data_rd_i          ( cline_data_rd       ),
     .cline_hit_o        ( cline_hit           ),
-    .ifill_data_i       ( ifill_resp_i.data   ),
-    .data_o             ( icache_resp_o.data  )
+    .ifill_data_i       ( ifill_resp_data_i   ),
+    .data_o             ( icache_resp_data_o  )
 );
 
 
-sargantana_icache_ff icache_ff(
+sargantana_icache_ff #(
+    .ICACHE_N_WAY       ( ICACHE_N_WAY      ),
+    .PPN_BIT_SIZE       ( PPN_BIT_SIZE      ),
+    .ICACHE_TAG_WIDTH   ( ICACHE_TAG_WIDTH  ),
+    .IDX_BITS_SIZE      ( IDX_BITS_SIZE     ),
+    .VPN_BITS_SIZE      ( VPN_BITS_SIZE     )
+) icache_ff(
     .clk_i              ( clk_i             ),
     .rstn_i             ( rstn_i            ),
     //.vaddr_d            ( vaddr_d           ),
@@ -269,8 +366,14 @@ sargantana_icache_ff icache_ff(
     .ireq_kill_q        (ireq_kill_q ),
     .ifill_process_started_d (ifill_process_started_d),
     .ifill_process_started_q (ifill_process_started_q ),
-    .mmu_tresp_d        (mmu_tresp_d),
-    .mmu_tresp_q        (mmu_tresp_q),
+    .mmu_tresp_miss_d   ( mmu_tresp_miss_d  ),
+    .mmu_tresp_ptw_v_d  ( mmu_tresp_ptw_v_d ),
+    .mmu_tresp_ppn_d    ( mmu_tresp_ppn_d   ),
+    .mmu_tresp_xcpt_d   ( mmu_tresp_xcpt_d  ),
+    .mmu_tresp_miss_q   ( mmu_tresp_miss_q  ),
+    .mmu_tresp_ptw_v_q  ( mmu_tresp_ptw_v_q ),
+    .mmu_tresp_ppn_q    ( mmu_tresp_ppn_q   ),
+    .mmu_tresp_xcpt_q   ( mmu_tresp_xcpt_q  ),
     .cache_enable_d     ( ifill_req_was_sent_d ),
     .cache_enable_q     ( ifill_req_was_sent_q )
 );

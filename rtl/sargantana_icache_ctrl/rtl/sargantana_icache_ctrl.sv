@@ -16,6 +16,10 @@
 
 module sargantana_icache_ctrl 
     import sargantana_icache_pkg::*;
+#(
+    parameter int   ICACHE_N_WAY = 4
+
+)
 (
     input  logic clk_i              ,
     input  logic rstn_i             ,

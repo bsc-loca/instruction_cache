@@ -17,7 +17,17 @@
 module sargantana_icache_checker
     import sargantana_icache_pkg::*;
 #(
-    parameter logic LINES_256   = 1'b0
+    parameter logic LINES_256   = 1'b0,
+
+    parameter int unsigned ICACHE_N_WAY     = 4,
+    parameter int unsigned TAG_WIDHT        = 20,
+    parameter int unsigned WAY_WIDHT        = 32*8,
+    parameter int unsigned FETCH_WIDHT      = 128,
+
+    localparam int unsigned ICACHE_TAG_WIDTH = TAG_WIDHT
+
+
+
 )
 (
     input  logic                           cmp_enable_q     ,
@@ -45,7 +55,9 @@ end
 endgenerate
 
 // find valid cache line
-sargantana_icache_tzc_idx tzc_idx (
+sargantana_icache_tzc_idx #(
+  .ICACHE_N_WAY ( ICACHE_N_WAY )
+) tzc_idx (
     .in_i  ( cline_hit_o  ),
     .way_o ( idx          )
 );
