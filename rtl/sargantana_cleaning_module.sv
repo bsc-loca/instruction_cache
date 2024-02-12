@@ -15,7 +15,7 @@
 
 module sargantana_cleaning_module #(
     parameter int unsigned  ICACHE_DEPTH = 64,
-    localparam int unsigned ADDR_WIDHT  = $clog2( ICACHE_DEPTH ),                                   //- icache Addr vector
+    localparam int unsigned ADDR_WIDHT  = $clog2( ICACHE_DEPTH )                                   //- icache Addr vector
 )
 (
     input  logic                    clk_i           ,
