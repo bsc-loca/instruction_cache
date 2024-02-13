@@ -88,9 +88,8 @@ module sargantana_top_icache
     input  logic                            ifill_resp_valid_i          , // Valid response
     input  logic                            ifill_resp_ack_i            , // IFILL request was received
     input  logic [SET_WIDHT-1:0]            ifill_resp_data_i           , // Full cache line
-    input  logic [1:0]                      ifill_resp_beat_i           ,
     input  logic                            ifill_resp_inv_valid_i      , //- valid invalidation and
-    input  logic [ICACHE_INDEX_WIDTH-1:0]   ifill_resp_inv_paddr_i      , //- index to invalidate
+    input  logic [ICACHE_INDEX_WIDTH-2:0]   ifill_resp_inv_paddr_i      , //- index to invalidate
 
     output logic                            icache_ifill_req_valid_o    ,  // valid request
     output logic [$clog2(ICACHE_N_WAY)-1:0] icache_ifill_req_way_o      ,  // way to replace
@@ -103,7 +102,6 @@ module sargantana_top_icache
 
 logic     [ICACHE_TAG_WIDTH-1:0] cline_tag_d      ; //- Cache-line tag
 logic     [ICACHE_TAG_WIDTH-1:0] cline_tag_q      ; //- Cache-line tag
-logic     [ICACHE_TAG_WIDTH-1:0] tag_paddr        ; //- Cache-line tag
 logic     [ICACHE_IDX_WIDTH-1:0] vaddr_index      ;
 //logic           [VADDR_SIZE-1:0] vaddr_d          ;
 //logic           [VADDR_SIZE-1:0] vaddr_q          ;
@@ -129,7 +127,6 @@ logic [VPN_BITS_SIZE-1:0]   vpn_q ;
 logic ifill_req_valid   ;
 logic flush_d           ;
 logic flush_q           ;
-logic paddr_is_nc       ;
 logic replay_valid      ;
 logic valid_ireq_d      ;
 logic valid_ireq_q      ;
@@ -138,7 +135,6 @@ logic ireq_kill_q       ;
 logic flush_enable      ;
 logic cache_rd_ena      ;
 logic cache_wr_ena      ;
-logic req_valid         ;
 logic tag_we_valid      ;
 logic cmp_enable        ;
 logic cmp_enable_q      ;
@@ -240,7 +236,6 @@ sargantana_icache_ctrl #(
     .clk_i              ( clk_i                     ),
     .rstn_i             ( rstn_i                    ),
     .cache_enable_i     ( 1'b1                      ),
-    .paddr_is_nc_i      ( paddr_is_nc               ),
     .flush_i            ( is_flush_q                ),
     .flush_done_i       ( 1'b0                      ),
     .cmp_enable_o       (  cmp_enable               ),
@@ -302,7 +297,7 @@ sargantana_icache_replace_unit #(
     .rstn_i         ( rstn_i           ),
     .inval_i        ( valid_inv        ),
     .cline_index_i  ( vaddr_index      ),
-    .cache_rd_ena_i ( valid_ireq_d | cache_rd_ena ),
+    .cache_rd_ena_i ( (valid_ireq_d | cache_rd_ena) ),
     .cache_wr_ena_i ( cache_wr_ena     ),
     .flush_ena_i    ( flush_enable     ),
     .way_valid_bits_i ( way_valid_bits      ),
@@ -332,7 +327,6 @@ sargantana_icache_checker #(
     .way_valid_bits_i   ( way_valid_bits      ),
     .data_rd_i          ( cline_data_rd       ),
     .cline_hit_o        ( cline_hit           ),
-    .ifill_data_i       ( ifill_resp_data_i   ),
     .data_o             ( icache_resp_data_o  )
 );
 

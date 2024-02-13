@@ -27,7 +27,6 @@ localparam int unsigned ICACHE_SIZE  = 16  ; // Total size in KB
 localparam int unsigned ASSOCIATIVE  = 4   ; // Associativity
 
 //------------------------------------------------
-localparam int unsigned WORD_SIZE    = 64                 ; //- Word size in a set.
 localparam int unsigned SET_WIDHT    = ICACHE_MEM_BLOCK*8 ; //- Cache line
 localparam int unsigned ICACHE_DEPTH = (((ICACHE_SIZE*1024)/ASSOCIATIVE)/ICACHE_MEM_BLOCK) ;
 
@@ -41,7 +40,6 @@ localparam int unsigned WAY_WIDHT    = SET_WIDHT               ; //-
 localparam int unsigned ICACHE_OFFSET_WIDTH = $clog2(SET_WIDHT/8); // align to 64bytes
 localparam int unsigned ICACHE_INDEX_WIDTH  = $clog2(ICACHE_DEPTH) + ICACHE_OFFSET_WIDTH;
 
-localparam int unsigned BLOCK_ADDR_SIZE = drac_pkg::PHY_ADDR_SIZE - ICACHE_OFFSET_WIDTH;
 localparam int unsigned PPN_BIT_SIZE    = drac_pkg::PHY_ADDR_SIZE - ICACHE_INDEX_WIDTH;
 localparam int unsigned TAG_WIDHT       = drac_pkg::PHY_ADDR_SIZE - ICACHE_INDEX_WIDTH; //- Tag size.
 localparam int unsigned VADDR_SIZE      = drac_pkg::VIRT_ADDR_SIZE; // TODO: check this
@@ -120,7 +118,6 @@ typedef struct packed {
       logic                 valid ; // Valid response
       logic                 ack   ; // IFILL request was received
       logic [SET_WIDHT-1:0] data  ; // Full cache line
-      logic           [1:0] beat  ;
       inv_t                 inv   ;
   } ifill_resp_i_t;
 

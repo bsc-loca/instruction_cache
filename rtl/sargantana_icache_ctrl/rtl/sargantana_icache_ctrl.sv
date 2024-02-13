@@ -23,7 +23,6 @@ module sargantana_icache_ctrl
     input  logic clk_i              ,
     input  logic rstn_i             ,
     input  logic cache_enable_i     , //-From CSR
-    input  logic paddr_is_nc_i      ,
     input  logic flush_i            ,
     input  logic flush_done_i       ,
     output logic cmp_enable_o       ,
@@ -69,7 +68,6 @@ logic is_hit_or_excpt;
 logic is_hit;
 logic is_flush_or_kill;
 logic valid_ifill_resp;
-logic is_TLB_MISS;
 
 //- A valid request from the core.
 //- There doesn't have to be an IFILL response from the upper level and
@@ -226,7 +224,6 @@ always_comb begin
     endcase
 end
 
-assign is_TLB_MISS = (state_q == TLB_MISS);
 
 endmodule
 

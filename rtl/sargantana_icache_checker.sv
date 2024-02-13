@@ -33,7 +33,6 @@ module sargantana_icache_checker
     input  logic    [ICACHE_TAG_WIDTH-1:0] cline_tag_d      , //- From mmu, paddr.
     input  logic        [ICACHE_N_WAY-1:0] way_valid_bits_i ,
     input  logic                   [ 1:0 ] fetch_idx_i      ,    
-    input  logic           [WAY_WIDHT-1:0] ifill_data_i     , //- Cache line. 
     output logic        [ICACHE_N_WAY-1:0] cline_hit_o      ,
     output logic         [FETCH_WIDHT-1:0] data_o           ,
     

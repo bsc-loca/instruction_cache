@@ -25,10 +25,10 @@ module sargantana_icache_replace_unit
 
 )
 (
-    input                                   clk_i            ,
-    input                                   rstn_i           ,
+    input  logic                            clk_i            ,
+    input  logic                            rstn_i           ,
     //input  inval_t                          inval_i          ,
-    input  logic                          inval_i          ,
+    input  logic                            inval_i          ,
     input  logic                            flush_ena_i      ,
     input  logic                            cache_rd_ena_i   ,
     input  logic                            cache_wr_ena_i   ,
@@ -78,13 +78,7 @@ assign addr_valid_o = cline_index_i;
 
 //- To tag ram. In an invalidation only clear valid bits. 
                          // A valid read from core.
-assign tag_req_valid_o = cache_rd_ena_i | inval_req ? '1 :
-                         // Invalidation request to all ways.
-                         // inval_req  ? '1 :
-                         // Invalidation request to one way.
-                         //(inval_req)                ? way_to_inval_oh : 
-                         //(inval_req)                ? way_to_replace_q_oh : 
-                                                      way_to_replace_q_oh;
+assign tag_req_valid_o = (cache_rd_ena_i | inval_req) ? '1 : way_to_replace_q_oh;
 
 assign we_valid_o = cache_wr_ena_i | inval_req ;
 
