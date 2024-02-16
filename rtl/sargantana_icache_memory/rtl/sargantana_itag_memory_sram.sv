@@ -55,53 +55,29 @@ end
 endgenerate
 
 `ifdef SRAM_IP
+    logic [ICACHE_N_WAY-1:0][TAG_WIDHT-1:0] mask;
+    logic chip_enable;
 
-  //Tag array wires
-  logic [107:0] q_sram;
-  logic [107:0] write_mask, write_data, w_mask, w_data, mask;
-  logic write_enable;
-  logic chip_enable;
-  logic [TAG_ADDR_WIDHT-1:0] address;
+    assign chip_enable = |req_i;
 
-  // Tag array SRAM implementation
+    always_comb begin
+        for (int i = 0; i < ICACHE_N_WAY; i++) begin
+            mask[i] = {TAG_WIDHT{req_i[i] & we_i}};
+        end
+    end
 
-  assign mask[26:0] = {27{req_i[0]}};
-  assign mask[53:27] = {27{req_i[1]}};
-  assign mask[80:54] = {27{req_i[2]}};
-  assign mask[107:81] = {27{req_i[3]}};
-  assign w_mask = {108{we_i}} & mask;
-      
-  assign w_data[26:0] = data_i;
-  assign w_data[53:27] = data_i;
-  assign w_data[80:54] = data_i;
-  assign w_data[107:81] = data_i;
-
-  assign write_mask = ~w_mask;
-  assign write_data = w_data;
-  assign write_enable = ~we_i;
-  assign address = addr_i;
-  assign chip_enable = ~(|req_i);
-
-  RF_SP_128x108_M2B1S2 MDArray_tag_il1 (
-      .A(address),
-      .D(write_data),
-      .CLK(clk_i),
-      .CEN(1'b0), // chip-enable active-low
-      .GWEN(write_enable), // write-enable active-low
-      .WEN(write_mask), // write-enable active-low (WEN[0]=LSB)
-      .EMA(3'b000),
-      .EMAW(2'b00),
-      .EMAS(1'b0),
-      .Q(q_sram),
-      .STOV(1'b0),
-      .RET(1'b0)
-  );
-
-  assign tag_way_o[0] = q_sram[26:0];
-  assign tag_way_o[1] = q_sram[53:27];
-  assign tag_way_o[2] = q_sram[80:54];
-  assign tag_way_o[3] = q_sram[107:81];
-
+    asic_sram_1p #(
+        .ADDR_WIDTH(TAG_ADDR_WIDHT),
+        .DATA_WIDTH(ICACHE_N_WAY * TAG_WIDHT)
+    ) sram (
+        .A(addr_i),
+        .DI({ICACHE_N_WAY{data_i}}),
+        .BW(mask),
+        .CLK(clk_i),
+        .CE(chip_enable),
+        .RDWEN(we_i),
+        .DO(tag_way_o)
+    );
 
 `endif //SRAM_IP
 

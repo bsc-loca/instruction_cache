@@ -44,37 +44,18 @@ module sargantana_icache_way
         .data_o(data_o) 
     );
 `else
-    logic [255:0] RW0O_sram;
-    logic [255:0]  write_data;
-    logic [ADDR_WIDHT-1:0] address;
-    logic write_enable;
-    logic chip_enable;
-    
-	assign write_data = data_i;
-	assign write_enable = ~we_i;
-	assign chip_enable = ~req_i;
-	assign address = addr_i;
-        
-    RF_2P_128x256_M1B2S2 L1InstArray (
-        .CENA(1'b0),
-	    .AA(address),
-	    .CENB(1'b0),
-	    .AB(address),
-	    .DB(write_data),
-	    .WENB({256{write_enable}}),
-	    .STOV(1'b0),
-	    .EMAA(3'b000),
-	    .EMASA(1'b0),
-	    .EMAB(3'b000),
-	    .RET(1'b0),
-	    .QNAPA(1'b0),
-	    .QNAPB(1'b0),
-	    .CLKA(clk_i),
-	    .CLKB(clk_i),
-	    .QA(RW0O_sram)
+    asic_sram_1p #(
+        .ADDR_WIDTH(ADDR_WIDHT),
+        .DATA_WIDTH(SET_WIDHT)
+    ) sram (
+       .A(addr_i),
+       .DI(data_i),
+       .BW({SET_WIDHT{we_i}}),
+       .CLK(clk_i),
+       .CE(req_i),
+       .RDWEN(we_i),
+       .DO(data_o)
     );
-    
-    assign data_o = RW0O_sram;
 `endif
 
 endmodule
