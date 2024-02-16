@@ -89,7 +89,7 @@ module sargantana_top_icache
     input  logic                            ifill_resp_ack_i            , // IFILL request was received
     input  logic [SET_WIDHT-1:0]            ifill_resp_data_i           , // Full cache line
     input  logic                            ifill_resp_inv_valid_i      , //- valid invalidation and
-    input  logic [ICACHE_INDEX_WIDTH-2:0]   ifill_resp_inv_paddr_i      , //- index to invalidate
+    input  logic [ICACHE_INDEX_WIDTH-1:0]   ifill_resp_inv_paddr_i      , //- index to invalidate
 
     output logic                            icache_ifill_req_valid_o    ,  // valid request
     output logic [$clog2(ICACHE_N_WAY)-1:0] icache_ifill_req_way_o      ,  // way to replace

@@ -78,7 +78,7 @@ sargantana_top_icache #(
     .ifill_resp_ack_i           (ifill_resp_i.ack),
     .ifill_resp_data_i          (ifill_resp_i.data),
     .ifill_resp_inv_valid_i     (ifill_resp_i.inv.valid),
-    .ifill_resp_inv_paddr_i     (ifill_resp_i.inv.paddr[11:1]),
+    .ifill_resp_inv_paddr_i     (ifill_resp_i.inv.paddr),
     
     .icache_ifill_req_valid_o   (icache_ifill_req_o.valid),
     .icache_ifill_req_way_o     (icache_ifill_req_o.way),
