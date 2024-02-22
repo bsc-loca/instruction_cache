@@ -29,7 +29,6 @@ module sargantana_icache_checker
 
 )
 (
-    input  logic                           cmp_enable_q     ,
     input  logic    [ICACHE_TAG_WIDTH-1:0] cline_tag_d      , //- From mmu, paddr.
     input  logic        [ICACHE_N_WAY-1:0] way_valid_bits_i ,
     input  logic                   [ 1:0 ] fetch_idx_i      ,    
@@ -65,7 +64,7 @@ function automatic logic [FETCH_WIDHT-1:0] chunk_sel(
     input logic [1:0] offset
   );
     logic [FETCH_WIDHT-1:0] out;
-    if (LINES_256) begin    // 256b fetch
+    if (LINES_256 == 1'b1) begin    // 256b fetch
 `ifdef ICACHE_32B
         out = data[255 : 0];
 `else

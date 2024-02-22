@@ -33,7 +33,7 @@ module sargantana_tag_way_memory
     output logic                  vbit_o
 );
     
-logic [TAG_WIDHT-1:0] memory [0:TAG_DEPTH-1];
+logic [TAG_WIDHT-1:0] memory [TAG_DEPTH-1:0];
 
 logic [TAG_DEPTH-1:0] vbit_vec;
 

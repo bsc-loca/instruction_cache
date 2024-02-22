@@ -37,7 +37,7 @@ module sargantana_icache_replace_unit
     input  logic     [ICACHE_IDX_WIDTH-1:0] cline_index_i    , //-From core 
     input  logic [$clog2(ICACHE_N_WAY)-1:0] way_to_replace_q ,
     output logic [$clog2(ICACHE_N_WAY)-1:0] way_to_replace_d ,
-    output logic [$clog2(ICACHE_N_WAY)-1:0] way_to_replace_o ,
+    //output logic [$clog2(ICACHE_N_WAY)-1:0] way_to_replace_o ,
     output logic                            we_valid_o       ,
     output logic     [ICACHE_IDX_WIDTH-1:0] addr_valid_o     , //Valid address to ram
     output logic         [ICACHE_N_WAY-1:0] data_req_valid_o ,    
@@ -51,6 +51,7 @@ logic all_ways_valid ;
 
 //logic [ICACHE_IDX_WIDTH-1:0] addr_to_inval       ; 
 //logic     [ICACHE_N_WAY-1:0] way_to_inval_oh     ;  // way to invalidate (onehot)
+logic [$clog2(ICACHE_N_WAY)-1:0] way_to_replace_o ;
 logic     [ICACHE_N_WAY-1:0] way_to_replace_q_oh ; // way to replace (onehot)
 
 logic [$clog2(ICACHE_N_WAY)-1:0] a_random_way  ;

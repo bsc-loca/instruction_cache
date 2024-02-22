@@ -32,12 +32,12 @@ module sargantana_top_icache
     localparam int unsigned ICACHE_SIZE         = 16,   // Total size in KB 
     localparam int unsigned ASSOCIATIVE         = 4,    // Associativity
 
-    localparam int unsigned WORD_SIZE           = 64,                                                       //- Word size in a set.
+    //localparam int unsigned WORD_SIZE           = 64,                                                       //- Word size in a set.
     localparam int unsigned SET_WIDHT           = ICACHE_MEM_BLOCK*8,                                       //- Cache line
     localparam int unsigned ICACHE_DEPTH        = (((ICACHE_SIZE*1024)/ASSOCIATIVE)/ICACHE_MEM_BLOCK),
 
     localparam int unsigned ICACHE_N_WAY        = ASSOCIATIVE,                                              //- Number of ways.
-    localparam int unsigned ICACHE_N_WAY_CLOG2  = $clog2( ICACHE_N_WAY ),
+    //localparam int unsigned ICACHE_N_WAY_CLOG2  = $clog2( ICACHE_N_WAY ),
     localparam int unsigned TAG_DEPTH           = ICACHE_DEPTH,                                             //- .
     localparam int unsigned ADDR_WIDHT          = $clog2( ICACHE_DEPTH ),                                   //- icache Addr vector
     localparam int unsigned TAG_ADDR_WIDHT      = $clog2( TAG_DEPTH ),                                      //- 
@@ -46,7 +46,7 @@ module sargantana_top_icache
     localparam int unsigned ICACHE_OFFSET_WIDTH = $clog2(SET_WIDHT/8),                                      // align to 64bytes
     localparam int unsigned ICACHE_INDEX_WIDTH  = $clog2(ICACHE_DEPTH) + ICACHE_OFFSET_WIDTH,
 
-    localparam int unsigned BLOCK_ADDR_SIZE     = ADDR_SIZE - ICACHE_OFFSET_WIDTH,
+    //localparam int unsigned BLOCK_ADDR_SIZE     = ADDR_SIZE - ICACHE_OFFSET_WIDTH,
     localparam int unsigned PPN_BIT_SIZE        = ADDR_SIZE - ICACHE_INDEX_WIDTH,
     localparam int unsigned TAG_WIDHT           = ADDR_SIZE - ICACHE_INDEX_WIDTH,                           //- Tag size.
 
@@ -92,7 +92,7 @@ module sargantana_top_icache
     input  logic [ICACHE_INDEX_WIDTH-1:0]   ifill_resp_inv_paddr_i      , //- index to invalidate
 
     output logic                            icache_ifill_req_valid_o    ,  // valid request
-    output logic [$clog2(ICACHE_N_WAY)-1:0] icache_ifill_req_way_o      ,  // way to replace
+    //output logic [$clog2(ICACHE_N_WAY)-1:0] icache_ifill_req_way_o      ,  // way to replace
     output logic [PADDR_SIZE-1:0]           icache_ifill_req_paddr_o    ,  // physical address
 
     // PMU
@@ -117,7 +117,7 @@ logic     [ICACHE_N_WAY-1:0] cline_hit       ;
 logic [ICACHE_N_WAY-1:0][TAG_WIDHT-1:0] way_tags     ;
 logic [ICACHE_N_WAY-1:0][WAY_WIDHT-1:0] cline_data_rd;
 
-logic [VADDR_SIZE-1:0] vaddr_in;  // virtual address out
+//logic [VADDR_SIZE-1:0] vaddr_in;  // virtual address out
 
 logic [IDX_BITS_SIZE-1:0]   idx_d ;
 logic [IDX_BITS_SIZE-1:0]   idx_q ;
@@ -134,6 +134,7 @@ logic ireq_kill_d       ;
 logic ireq_kill_q       ;
 logic flush_enable      ;
 logic cache_rd_ena      ;
+logic cache_rd_valid    ;
 logic cache_wr_ena      ;
 logic tag_we_valid      ;
 logic cmp_enable        ;
@@ -150,7 +151,7 @@ logic ifill_req_was_sent_q ;
 logic ifill_process_started_d   ;
 logic ifill_process_started_q   ;
 logic tag_we                    ;
-logic block_invalidate          ;
+//logic block_invalidate          ;
 logic valid_inv                 ;
 logic ctrl_ready                ;
 
@@ -177,7 +178,7 @@ assign ireq_kill_d = lagarto_ireq_kill_i ;
 //vaddr keeps available during all processes.
 assign vpn_d = ( lagarto_ireq_valid_i ) ? {lagarto_ireq_vpn_i} : vpn_q;
 assign idx_d = ( lagarto_ireq_valid_i ) ? {lagarto_ireq_idx_i} : idx_q;
-assign vaddr_in = {vpn_d,idx_d};
+//assign vaddr_in = {vpn_d,idx_d};
                                                       
 //assign icache_treq_vpn_o = vpn_d;
 assign icache_treq_vpn_o = vpn_d;
@@ -190,7 +191,8 @@ assign mmu_tresp_xcpt_d     = mmu_tresp_xcpt_i;
 
 //- Split virtual address into index and offset to address cache arrays.
 assign vaddr_index = valid_inv ? ifill_resp_inv_paddr_i[ICACHE_IDX_WIDTH:1] : 
-                                 vaddr_in[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
+                                 idx_d[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
+                                 //vaddr_in[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
                      
 assign cline_tag_d  = mmu_tresp_ppn_q ;
                                                                 
@@ -210,7 +212,7 @@ end
 //---------------------------------------------------------------------
 //------------------------------------------------------ IFILL request.
 
-assign icache_ifill_req_paddr_o = {cline_tag_d,idx_q[11:ICACHE_OFFSET_WIDTH],{ICACHE_OFFSET_WIDTH{1'b0}}};
+assign icache_ifill_req_paddr_o = {cline_tag_d,idx_q[11:ICACHE_OFFSET_WIDTH],{{ICACHE_OFFSET_WIDTH}{1'b0}}};
 
 assign icache_ifill_req_valid_o = ifill_req_valid  && !ireq_kill_d ;
 
@@ -224,7 +226,7 @@ assign ifill_process_started_d = ifill_resp_valid_i ;
 //assign ifill_process_started_d = ((ifill_resp_beat_i == 2'b00) && ifill_resp_valid_i) ? 1'b1 :
 //                                  (valid_ifill_resp) ? 1'b0 : ifill_process_started_q;
 
-assign block_invalidate = ifill_process_started_q && ireq_kill_d ; 
+//assign block_invalidate = ifill_process_started_q && ireq_kill_d ; 
 
 assign valid_bit = valid_inv ? 1'b0 : tag_we_valid & ~ireq_kill_d & ~ireq_kill_q ;
                                          
@@ -289,6 +291,8 @@ sargantana_top_memory #(
     .valid_bit_o    ( way_valid_bits )  
 );
 
+assign cache_rd_valid = valid_ireq_d | cache_rd_ena ;
+
 sargantana_icache_replace_unit #(
     .ICACHE_N_WAY       ( ICACHE_N_WAY ),
     .ICACHE_IDX_WIDTH   ( ICACHE_IDX_WIDTH )
@@ -297,7 +301,7 @@ sargantana_icache_replace_unit #(
     .rstn_i         ( rstn_i           ),
     .inval_i        ( valid_inv        ),
     .cline_index_i  ( vaddr_index      ),
-    .cache_rd_ena_i ( (valid_ireq_d | cache_rd_ena) ),
+    .cache_rd_ena_i ( cache_rd_valid ),
     .cache_wr_ena_i ( cache_wr_ena     ),
     .flush_ena_i    ( flush_enable     ),
     .way_valid_bits_i ( way_valid_bits      ),
@@ -306,7 +310,7 @@ sargantana_icache_replace_unit #(
     .cmp_en_q       ( cmp_enable_q       ),
     .way_to_replace_q ( way_to_replace_q      ),
     .way_to_replace_d ( way_to_replace_d      ),
-    .way_to_replace_o ( icache_ifill_req_way_o ),
+    //.way_to_replace_o ( icache_ifill_req_way_o ),
     .data_req_valid_o  ( data_req_valid        ),
     .tag_req_valid_o  ( tag_req_valid        )
 );
@@ -321,7 +325,6 @@ sargantana_icache_checker #(
     .FETCH_WIDHT        ( FETCH_WIDHT         )
 ) ichecker(
     .read_tags_i        ( way_tags            ),
-    .cmp_enable_q       ( cmp_enable_q        ),
     .cline_tag_d        ( cline_tag_d         ),
     .fetch_idx_i        ( idx_q[5:4]          ),
     .way_valid_bits_i   ( way_valid_bits      ),
