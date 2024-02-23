@@ -81,7 +81,7 @@ sargantana_top_icache #(
     .ifill_resp_inv_paddr_i     (ifill_resp_i.inv.paddr),
     
     .icache_ifill_req_valid_o   (icache_ifill_req_o.valid),
-    .icache_ifill_req_way_o     (icache_ifill_req_o.way),
+    // .icache_ifill_req_way_o     (icache_ifill_req_o.way),
     .icache_ifill_req_paddr_o   (icache_ifill_req_o.paddr),
 
     .imiss_time_pmu_o           (imiss_time_pmu_o),
