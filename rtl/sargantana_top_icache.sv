@@ -70,7 +70,7 @@ module sargantana_top_icache
     output logic                            icache_resp_ready_o         ,  // icache is ready
     output logic                            icache_resp_valid_o         ,  // signals a valid read
     output logic [FETCH_WIDHT-1 :0]         icache_resp_data_o          ,  // 2+ cycle out: tag
-    output logic [VADDR_SIZE-1:0]           icache_resp_vaddr_o         ,  // virtual address out
+    output logic [ADDR_SIZE-1:0]            icache_resp_vaddr_o         ,  // virtual address out
     output logic                            icache_resp_xcpt_o          ,  // we've encountered an exception
 
     // MMU interface                         

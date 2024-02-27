@@ -76,7 +76,7 @@ typedef struct packed {
     logic                    ready;  // icache is ready
     logic                    valid;  // signals a valid read
     logic [FETCH_WIDHT-1 :0] data ;  // 2+ cycle out: tag
-    logic   [VADDR_SIZE-1:0] vaddr;  // virtual address out
+    logic   [drac_pkg::PHY_VIRT_MAX_ADDR_SIZE-1:0] vaddr;  // virtual address out
     logic                    xcpt ;  // we've encountered an exception
 } iresp_o_t;
 
