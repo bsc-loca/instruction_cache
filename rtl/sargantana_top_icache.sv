@@ -20,7 +20,6 @@ module sargantana_top_icache
     parameter logic         LINES_256           = 1'b0,
 
     parameter int unsigned  ICACHE_MEM_BLOCK    = 64,
-    parameter int unsigned  VADDR_SIZE          = 39,   //! Virtual address size.
     parameter int unsigned  PADDR_SIZE          = 40,   //! Physical address size.
 
     parameter int unsigned  ADDR_SIZE           = 40,   //! Maximum between physical address size and virtual address size.
@@ -103,8 +102,6 @@ module sargantana_top_icache
 logic     [ICACHE_TAG_WIDTH-1:0] cline_tag_d      ; //- Cache-line tag
 logic     [ICACHE_TAG_WIDTH-1:0] cline_tag_q      ; //- Cache-line tag
 logic     [ICACHE_IDX_WIDTH-1:0] vaddr_index      ;
-//logic           [VADDR_SIZE-1:0] vaddr_d          ;
-//logic           [VADDR_SIZE-1:0] vaddr_q          ;
 logic [$clog2(ICACHE_N_WAY)-1:0] way_to_replace_q ;
 logic [$clog2(ICACHE_N_WAY)-1:0] way_to_replace_d ;
 
@@ -117,16 +114,12 @@ logic     [ICACHE_N_WAY-1:0] cline_hit       ;
 logic [ICACHE_N_WAY-1:0][TAG_WIDHT-1:0] way_tags     ;
 logic [ICACHE_N_WAY-1:0][WAY_WIDHT-1:0] cline_data_rd;
 
-//logic [VADDR_SIZE-1:0] vaddr_in;  // virtual address out
-
 logic [IDX_BITS_SIZE-1:0]   idx_d ;
 logic [IDX_BITS_SIZE-1:0]   idx_q ;
 logic [VPN_BITS_SIZE-1:0]   vpn_d ;
 logic [VPN_BITS_SIZE-1:0]   vpn_q ;
 
 logic ifill_req_valid   ;
-logic flush_d           ;
-logic flush_q           ;
 logic replay_valid      ;
 logic valid_ireq_d      ;
 logic valid_ireq_q      ;
