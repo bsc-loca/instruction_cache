@@ -123,7 +123,6 @@ typedef struct packed {
 
   typedef struct packed {
       logic                               valid  ;  // valid request
-      logic [$clog2(ICACHE_N_WAY)-1:0]    way    ;  // way to replace
       logic [drac_pkg::PHY_ADDR_SIZE-1:0] paddr  ;  // physical address
   } ifill_req_o_t;
 
