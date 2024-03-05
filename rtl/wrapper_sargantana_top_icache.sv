@@ -44,7 +44,6 @@ sargantana_top_icache #(
     .LINES_256                  (LINES_256),
 
     .ICACHE_MEM_BLOCK           (ICACHE_MEM_BLOCK),
-    .VADDR_SIZE                 (VADDR_SIZE),
     .PADDR_SIZE                 (drac_pkg::PHY_ADDR_SIZE),
     .ADDR_SIZE                  (drac_pkg::PHY_ADDR_SIZE),
     .IDX_BITS_SIZE              ($bits(drac_pkg::icache_idx_t)),
