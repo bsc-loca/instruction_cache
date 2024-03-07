@@ -36,7 +36,7 @@ module sargantana_itag_memory_sram
 //- To build a memory of tags for each path.
 
 //Valid bit wires
-logic [TAG_DEPTH-1:0] vbit_vec [0:ICACHE_N_WAY-1];
+logic [TAG_DEPTH-1:0] vbit_vec [ICACHE_N_WAY-1:0];
 
 //--VALID bit vector
 genvar i;
