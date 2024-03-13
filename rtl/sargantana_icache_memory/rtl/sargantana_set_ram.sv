@@ -16,7 +16,6 @@
 /* Memory used to build a set*/
 module sargantana_set_ram
 #(
-    parameter int unsigned ICACHE_DEPTH = 64,
     parameter int unsigned SET_WIDHT    = 32*8,
     parameter int unsigned ADDR_WIDHT   = 6
 )
@@ -31,7 +30,7 @@ module sargantana_set_ram
     output logic  [SET_WIDHT-1:0] data_o
 );
 
-logic [SET_WIDHT-1:0] memory [ICACHE_DEPTH-1:0];
+logic [SET_WIDHT-1:0] memory [(2**ADDR_WIDTH)-1:0];
 
 always_ff @(posedge clk_i) begin
     if(!rstn_i) begin

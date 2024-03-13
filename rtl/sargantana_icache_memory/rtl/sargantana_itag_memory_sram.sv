@@ -60,11 +60,11 @@ endgenerate
 
     assign chip_enable = |req_i;
 
-    always_comb begin
-        for (int i = 0; i < ICACHE_N_WAY; i++) begin
-            mask[i] = {TAG_WIDHT{req_i[i] & we_i}};
+    generate
+        for (genvar gv_mask = 0; gv_mask < ICACHE_N_WAY; gv_mask++) begin
+            assign mask[gv_mask] = {TAG_WIDHT{req_i[gv_mask] & we_i}};
         end
-    end
+    endgenerate
 
     asic_sram_1p #(
         .ADDR_WIDTH(TAG_ADDR_WIDHT),

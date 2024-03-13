@@ -259,7 +259,6 @@ sargantana_icache_ctrl #(
 assign icache_resp_ready_o = ctrl_ready &~ valid_inv ;
 
 sargantana_top_memory #(
-    .ICACHE_DEPTH   ( ICACHE_DEPTH   ),
     .ICACHE_N_WAY   ( ICACHE_N_WAY   ),
     .TAG_DEPTH      ( TAG_DEPTH      ),
     .TAG_ADDR_WIDHT ( TAG_ADDR_WIDHT ),
