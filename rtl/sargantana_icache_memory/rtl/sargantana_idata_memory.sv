@@ -17,7 +17,6 @@
 //Build the ways.
 module sargantana_idata_memory 
 #(
-    parameter int unsigned ICACHE_DEPTH = 64,
     parameter int unsigned ICACHE_N_WAY = 4,
     parameter int unsigned SET_WIDHT    = 32*8,
     parameter int unsigned ADDR_WIDHT   = 6
@@ -37,7 +36,6 @@ genvar i;
 generate
 for ( i=0; i<ICACHE_N_WAY; i++ )begin:n_way
 sargantana_icache_way #(
-    .ICACHE_DEPTH   ( ICACHE_DEPTH  ),
     .SET_WIDHT      ( SET_WIDHT     ),
     .ADDR_WIDHT     ( ADDR_WIDHT    )
 ) way(

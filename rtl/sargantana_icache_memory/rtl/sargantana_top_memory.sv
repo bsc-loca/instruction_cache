@@ -17,7 +17,6 @@
 
 module sargantana_top_memory
 #(
-    parameter int unsigned ICACHE_DEPTH     = 64,
     parameter int unsigned ICACHE_N_WAY     = 4,
     parameter int unsigned TAG_DEPTH        = 64,
     parameter int unsigned TAG_ADDR_WIDHT   = $clog2( TAG_DEPTH ),
@@ -49,7 +48,6 @@ module sargantana_top_memory
 
 //- Data memory
 sargantana_idata_memory #(
-    .ICACHE_DEPTH   ( ICACHE_DEPTH  ),
     .ICACHE_N_WAY   ( ICACHE_N_WAY  ),
     .SET_WIDHT      ( SET_WIDHT     ),
     .ADDR_WIDHT     ( ADDR_WIDHT    )

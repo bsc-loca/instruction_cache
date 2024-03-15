@@ -30,7 +30,7 @@ module sargantana_set_ram
     output logic  [SET_WIDHT-1:0] data_o
 );
 
-logic [SET_WIDHT-1:0] memory [(2**ADDR_WIDTH)-1:0];
+logic [SET_WIDHT-1:0] memory [(2**ADDR_WIDHT)-1:0];
 
 always_ff @(posedge clk_i) begin
     if(!rstn_i) begin
