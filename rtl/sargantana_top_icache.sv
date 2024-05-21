@@ -28,6 +28,8 @@ module sargantana_top_icache
 
     parameter int unsigned  FETCH_WIDHT         = 128,
 
+    parameter int unsigned  ITLB_CYCLE          = 0,    //! Pick cycle to do asynch ITLB transaction {0, 1}
+
     localparam int unsigned ICACHE_SIZE         = 16,   // Total size in KB 
     localparam int unsigned ASSOCIATIVE         = 4,    // Associativity
 
@@ -133,6 +135,7 @@ logic tag_we_valid      ;
 logic cmp_enable        ;
 logic cmp_enable_q      ;
 logic treq_valid        ;
+logic treq_valid_q      ;
 logic valid_bit         ;
 logic valid_ifill_resp  ;
 logic is_flush_d        ;
@@ -158,6 +161,12 @@ logic                    mmu_tresp_ptw_v_q;
 logic [PPN_BIT_SIZE-1:0] mmu_tresp_ppn_q;
 logic                    mmu_tresp_xcpt_q;
 
+logic                    mmu_tresp_miss;
+logic                    mmu_tresp_ptw_v;
+logic [PPN_BIT_SIZE-1:0] mmu_tresp_ppn;
+logic                    mmu_tresp_xcpt;
+
+
 // a valid invalidation from L2
 assign valid_inv = ifill_resp_valid_i & ifill_resp_inv_valid_i ;
 
@@ -173,28 +182,67 @@ assign vpn_d = ( lagarto_ireq_valid_i ) ? {lagarto_ireq_vpn_i} : vpn_q;
 assign idx_d = ( lagarto_ireq_valid_i ) ? {lagarto_ireq_idx_i} : idx_q;
 //assign vaddr_in = {vpn_d,idx_d};
                                                       
-//assign icache_treq_vpn_o = vpn_d;
-assign icache_treq_vpn_o = vpn_d;
-assign icache_treq_valid_o = treq_valid || valid_ireq_d ;
+always_ff @(posedge clk_i or negedge rstn_i) begin 
+    if(!rstn_i) begin
+        treq_valid_q <= '0;
+    end
+    else begin
+        treq_valid_q <= treq_valid;
+    end
+end
 
-assign mmu_tresp_miss_d     = mmu_tresp_miss_i;
-assign mmu_tresp_ptw_v_d    = mmu_tresp_ptw_v_i;
-assign mmu_tresp_ppn_d      = mmu_tresp_ppn_i;
-assign mmu_tresp_xcpt_d     = mmu_tresp_xcpt_i;
+// Make mmu transaction in cycle 0 or cycle 1
+generate
+    if (ITLB_CYCLE == 0) begin
+        // mmu request
+        assign icache_treq_vpn_o = vpn_d;
+        assign icache_treq_valid_o = treq_valid || valid_ireq_d ;
+
+        // mmu response into register
+        assign mmu_tresp_miss_d     = mmu_tresp_miss_i;
+        assign mmu_tresp_ptw_v_d    = mmu_tresp_ptw_v_i;
+        assign mmu_tresp_ppn_d      = mmu_tresp_ppn_i;
+        assign mmu_tresp_xcpt_d     = mmu_tresp_xcpt_i;
+
+
+        // mmu response w/ reg into i$ ctrl
+        assign mmu_tresp_miss     = mmu_tresp_miss_q;
+        assign mmu_tresp_ptw_v    = mmu_tresp_ptw_v_q;
+        assign mmu_tresp_ppn      = mmu_tresp_ppn_q;
+        assign mmu_tresp_xcpt     = mmu_tresp_xcpt_q;
+    end
+    else begin
+        // mmu request
+        assign icache_treq_vpn_o = vpn_q;
+        assign icache_treq_valid_o = treq_valid_q || valid_ireq_q ;
+
+        // mmu into register not used
+        assign mmu_tresp_miss_d     = 1'b0;
+        assign mmu_tresp_ptw_v_d    = 1'b0;
+        assign mmu_tresp_ppn_d      = PPN_BIT_SIZE'(0);
+        assign mmu_tresp_xcpt_d     = 1'b0;
+
+        // mmu reponse w/ out reg into i$ ctrl
+        assign mmu_tresp_miss     = mmu_tresp_miss_i;
+        assign mmu_tresp_ptw_v    = mmu_tresp_ptw_v_i;
+        assign mmu_tresp_ppn      = mmu_tresp_ppn_i;
+        assign mmu_tresp_xcpt     = mmu_tresp_xcpt_i;
+    end
+endgenerate
 
 //- Split virtual address into index and offset to address cache arrays.
 assign vaddr_index = valid_inv ? ifill_resp_inv_paddr_i[ICACHE_IDX_WIDTH:1] : 
                                  idx_d[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
                                  //vaddr_in[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
                      
-assign cline_tag_d  = mmu_tresp_ppn_q ;
+assign cline_tag_d  = mmu_tresp_ppn ;
                                                                 
 // vaddr in fly 
 assign icache_resp_vaddr_o = {vpn_q,idx_q};
 
 // pass exception through
 logic icache_resp_valid ; 
-assign icache_resp_xcpt_o = mmu_tresp_xcpt_q && icache_resp_valid;
+assign icache_resp_xcpt_o = mmu_tresp_xcpt && icache_resp_valid;
 
 if (KILL_RESP) begin
     assign icache_resp_valid_o = icache_resp_valid && !ireq_kill_d;
@@ -241,9 +289,9 @@ sargantana_icache_ctrl #(
     .ireq_kill_d        ( ireq_kill_d               ),
     .iresp_ready_o      ( ctrl_ready                ),
     .iresp_valid_o      ( icache_resp_valid         ),
-    .mmu_miss_i         ( mmu_tresp_miss_q          ),
-    .mmu_ptw_valid_i    ( mmu_tresp_ptw_v_q         ),
-    .mmu_ex_valid_i     ( mmu_tresp_xcpt_q          ),
+    .mmu_miss_i         ( mmu_tresp_miss            ),
+    .mmu_ptw_valid_i    ( mmu_tresp_ptw_v           ),
+    .mmu_ex_valid_i     ( mmu_tresp_xcpt            ),
     .treq_valid_o       ( treq_valid                ),
     .valid_ifill_resp_i ( valid_ifill_resp          ),
     .ifill_resp_valid_i ( valid_ifill_resp          ),
