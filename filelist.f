@@ -1,10 +1,12 @@
+// Simulation / FPGA / ASIC memory library
+rtl/memory_library/include/bist_define.h
+-F rtl/memory_library/Flist.memory_library
+
+// iCache
 +incdir+./includes/
 ./includes/sargantana_icache_pkg.sv
 ./rtl/sargantana_cleaning_module.sv
 ./rtl/sargantana_icache_memory/rtl/sargantana_idata_memory.sv
-./rtl/sargantana_icache_memory/rtl/sargantana_tag_way_memory.sv
-./rtl/sargantana_icache_memory/rtl/sargantana_itag_memory.sv
-./rtl/sargantana_icache_memory/rtl/sargantana_set_ram.sv
 ./rtl/sargantana_icache_memory/rtl/sargantana_itag_memory_sram.sv
 ./rtl/sargantana_icache_memory/rtl/sargantana_top_memory.sv
 ./rtl/sargantana_icache_memory/rtl/sargantana_icache_way.sv

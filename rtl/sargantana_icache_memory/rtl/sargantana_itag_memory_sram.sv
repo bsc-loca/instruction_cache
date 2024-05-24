@@ -54,7 +54,6 @@ for ( i=0; i<ICACHE_N_WAY; i++ )begin
 end
 endgenerate
 
-`ifdef SRAM_IP
     logic [ICACHE_N_WAY-1:0][TAG_WIDHT-1:0] mask;
     logic chip_enable;
 
@@ -66,19 +65,28 @@ endgenerate
         end
     endgenerate
 
-    asic_sram_1p #(
+    sp_ram #(
         .ADDR_WIDTH(TAG_ADDR_WIDHT),
-        .DATA_WIDTH(ICACHE_N_WAY * TAG_WIDHT)
+        .DATA_WIDTH(ICACHE_N_WAY * TAG_WIDHT),
+        `ifdef SRAM_IP
+        .INSTANTIATE_ASIC_MEMORY(1'b1),
+        `else
+        .INSTANTIATE_ASIC_MEMORY(1'b0),
+        `endif
+        .INIT_MEMORY_ON_RESET('0) // tag SRAM doesn't need initialization
     ) sram (
-        .A(addr_i),
-        .DI({ICACHE_N_WAY{data_i}}),
-        .BW(mask),
-        .CLK(clk_i),
-        .CE(chip_enable),
-        .RDWEN(we_i),
-        .DO(tag_way_o)
+        .SR_ID('0),
+        .clk(clk_i),
+        .rst_n(rstn_i),
+        .clk_en(chip_enable),
+        .rdw_en(we_i),
+        .addr(addr_i),
+        .data_in({ICACHE_N_WAY{data_i}}),
+        .data_mask_in(mask),
+        .data_out(tag_way_o),
+        .srams_rtap_data( /* Unconnected */ ),
+        .rtap_srams_bist_command('0),
+        .rtap_srams_bist_data('0)
     );
-
-`endif //SRAM_IP
 
 endmodule

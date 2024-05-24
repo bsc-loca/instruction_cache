@@ -1,0 +1,3 @@
+[submodule "rtl/memory_library"]
+	path = rtl/memory_library
+	url = ../../../memory_library.git

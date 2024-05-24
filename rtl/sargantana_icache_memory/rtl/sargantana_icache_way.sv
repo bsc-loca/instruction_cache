@@ -28,32 +28,28 @@ module sargantana_icache_way
     output logic  [SET_WIDHT-1:0] data_o     
 );
 
-`ifndef SRAM_IP
-    sargantana_set_ram #(
-        .SET_WIDHT      ( SET_WIDHT     ),
-        .ADDR_WIDHT     ( ADDR_WIDHT    )
-    ) sram(
-        .clk_i (clk_i ),
-        .rstn_i(rstn_i),
-        .req_i (req_i ),
-        .we_i  (we_i  ),
-        .addr_i(addr_i),
-        .data_i(data_i),  
-        .data_o(data_o) 
-    );
-`else
-    asic_sram_1p #(
+    sp_ram #(
         .ADDR_WIDTH(ADDR_WIDHT),
-        .DATA_WIDTH(SET_WIDHT)
+        .DATA_WIDTH(SET_WIDHT),
+        `ifdef SRAM_IP
+        .INSTANTIATE_ASIC_MEMORY(1'b1),
+        `else
+        .INSTANTIATE_ASIC_MEMORY(1'b0),
+        `endif
+        .INIT_MEMORY_ON_RESET('0) // data SRAM doesn't need initialization
     ) sram (
-       .A(addr_i),
-       .DI(data_i),
-       .BW({SET_WIDHT{we_i}}),
-       .CLK(clk_i),
-       .CE(req_i),
-       .RDWEN(we_i),
-       .DO(data_o)
+        .SR_ID('0),
+        .clk(clk_i),
+        .rst_n(rstn_i),
+        .clk_en(req_i),
+        .rdw_en(we_i),
+        .addr(addr_i),
+        .data_in(data_i),
+        .data_mask_in({SET_WIDHT{we_i}}),
+        .data_out(data_o),
+        .srams_rtap_data( /* Unconnected */ ),
+        .rtap_srams_bist_command('0),
+        .rtap_srams_bist_data('0)
     );
-`endif
 
 endmodule
