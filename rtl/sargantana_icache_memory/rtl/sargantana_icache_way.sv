@@ -19,6 +19,9 @@ module sargantana_icache_way
     parameter int unsigned ADDR_WIDHT   = 6
 )
 (
+    `ifdef INTEL_PHYSICAL_MEM_CTRL
+    input  wire [27:0]            hduspsr_mem_ctrl,
+    `endif
     input  logic                  clk_i      ,
     input  logic                  rstn_i     ,
     input  logic                  req_i      ,
@@ -38,6 +41,9 @@ module sargantana_icache_way
         `endif
         .INIT_MEMORY_ON_RESET('0) // data SRAM doesn't need initialization
     ) sram (
+        `ifdef INTEL_PHYSICAL_MEM_CTRL
+        .INTEL_MEM_CTRL(hduspsr_mem_ctrl),
+        `endif
         .SR_ID('0),
         .clk(clk_i),
         .rst_n(rstn_i),

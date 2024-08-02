@@ -21,6 +21,9 @@ module wrapper_sargantana_top_icache
     parameter logic LINES_256   = 1'b0
 )
 (
+    `ifdef INTEL_PHYSICAL_MEM_CTRL
+    input wire [27:0]     hduspsr_mem_ctrl,
+    `endif
     input  logic          clk_i              ,
     input  logic          rstn_i             ,
     input  logic          flush_i            , 
@@ -50,6 +53,9 @@ sargantana_top_icache #(
     .VPN_BITS_SIZE              ($bits(drac_pkg::icache_vpn_t)),
     .FETCH_WIDHT                (FETCH_WIDHT)
 ) icache (
+    `ifdef INTEL_PHYSICAL_MEM_CTRL
+    .hduspsr_mem_ctrl           (hduspsr_mem_ctrl),
+    `endif
     .clk_i                      (clk_i),
     .rstn_i                     (rstn_i),
     .flush_i                    (flush_i),

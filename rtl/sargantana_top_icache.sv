@@ -56,6 +56,9 @@ module sargantana_top_icache
 
 )
 (
+    `ifdef INTEL_PHYSICAL_MEM_CTRL
+    input  wire [27:0]                      hduspsr_mem_ctrl            ,
+    `endif
     input  logic                            clk_i                       ,
     input  logic                            rstn_i                      ,
     input  logic                            flush_i                     , 
@@ -315,6 +318,9 @@ sargantana_top_memory #(
     .TAG_WIDHT      ( TAG_WIDHT      ),
     .ADDR_WIDHT     ( ADDR_WIDHT     )
 ) icache_memory(
+    `ifdef INTEL_PHYSICAL_MEM_CTRL
+    .hduspsr_mem_ctrl ( hduspsr_mem_ctrl ),
+    `endif
     .clk_i          ( clk_i  ),
     .rstn_i         ( rstn_i ),
     .tag_req_i      ( tag_req_valid  ),

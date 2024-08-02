@@ -21,6 +21,9 @@ module sargantana_itag_memory_sram
     parameter int unsigned TAG_WIDHT        = 20
 )
 (
+    `ifdef INTEL_PHYSICAL_MEM_CTRL
+    input  wire [27:0]                             hduspsr_mem_ctrl,
+    `endif
     input  logic                                   clk_i      ,
     input  logic                                   rstn_i     ,
     input  logic                [ICACHE_N_WAY-1:0] req_i      ,
@@ -75,6 +78,9 @@ endgenerate
         `endif
         .INIT_MEMORY_ON_RESET('0) // tag SRAM doesn't need initialization
     ) sram (
+        `ifdef INTEL_PHYSICAL_MEM_CTRL
+        .INTEL_MEM_CTRL(hduspsr_mem_ctrl),
+        `endif
         .SR_ID('0),
         .clk(clk_i),
         .rst_n(rstn_i),

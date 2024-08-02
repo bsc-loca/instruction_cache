@@ -22,6 +22,9 @@ module sargantana_idata_memory
     parameter int unsigned ADDR_WIDHT   = 6
 )
 (
+   `ifdef INTEL_PHYSICAL_MEM_CTRL
+    input  wire [27:0]                             hduspsr_mem_ctrl,
+   `endif
     input  logic                                   clk_i         ,
     input  logic                                   rstn_i        ,
     input  logic                [ICACHE_N_WAY-1:0] req_i         ,
@@ -39,6 +42,9 @@ sargantana_icache_way #(
     .SET_WIDHT      ( SET_WIDHT     ),
     .ADDR_WIDHT     ( ADDR_WIDHT    )
 ) way(
+    `ifdef INTEL_PHYSICAL_MEM_CTRL
+    .hduspsr_mem_ctrl (hduspsr_mem_ctrl),
+    `endif
     .clk_i       ( clk_i          ),
     .rstn_i      ( rstn_i         ),
     .req_i       ( req_i[i]       ),
