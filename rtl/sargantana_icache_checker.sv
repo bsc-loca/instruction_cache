@@ -96,7 +96,7 @@ function automatic logic [FETCH_WIDHT-1:0] chunk_sel(
 endfunction : chunk_sel
 
 
-assign data_o = cline_hit_o[idx] ? cline_sel[idx] : {FETCH_WIDHT{0}} ;
+assign data_o = cline_hit_o[idx] ? cline_sel[idx] : '0 ;
 
                                  
 endmodule
