@@ -25,6 +25,7 @@ module sargantana_icache_ctrl
     input  logic cache_enable_i     , //-From CSR
     input  logic flush_i            ,
     input  logic flush_done_i       ,
+    input  logic invalidation       ,
     output logic cmp_enable_o       ,
     output logic cache_rd_ena_o     , //- Read enable
     output logic cache_wr_ena_o     , //- Read enable
@@ -179,15 +180,15 @@ always_comb begin
             replay_valid_o    = 1'b0;
         end
         REPLAY_TLB: begin //110
-            state_d           = READ   ;
-            cmp_enable_o      = cache_enable_i ;
+            state_d           = (invalidation && !mmu_ex_valid_i) ? REPLAY_TLB : READ ;
+            cmp_enable_o      = (cache_enable_i && !invalidation) ;
             iresp_ready_o     = 1'b0  ;
             iresp_valid_o     = (mmu_ex_valid_i);
-            cache_rd_ena_o    = ( !mmu_miss_i && !mmu_ex_valid_i && !is_flush_or_kill) ;
+            cache_rd_ena_o    = ( !mmu_miss_i && !mmu_ex_valid_i && !is_flush_or_kill && !invalidation) ;
             cache_wr_ena_o    = 1'b0  ;
             miss_o            = 1'b0  ;
             miss_kill_o       = 1'b0 ;//PMU
-            treq_valid_o      = ( !mmu_miss_i && !mmu_ex_valid_i && !is_flush_or_kill); 
+            treq_valid_o      = ( !mmu_miss_i && !mmu_ex_valid_i && !is_flush_or_kill && !invalidation); 
             ifill_req_valid_o = 1'b0  ;
             flush_en_o        = flush_i  ;
             replay_valid_o    = 1'b1;

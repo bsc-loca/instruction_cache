@@ -285,6 +285,7 @@ sargantana_icache_ctrl #(
     .flush_i            ( is_flush_q                ),
     .flush_done_i       ( 1'b0                      ),
     .cmp_enable_o       (  cmp_enable               ),
+    .invalidation       ( valid_inv                 ),
     .cache_rd_ena_o     ( cache_rd_ena              ),
     .cache_wr_ena_o     ( cache_wr_ena              ),
     .ireq_valid_i       ( valid_ireq_q              ),
