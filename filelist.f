@@ -1,6 +1,6 @@
 // Simulation / FPGA / ASIC memory library
-rtl/memory_library/include/bist_define.h
--F rtl/memory_library/Flist.memory_library
++incdir+rtl/memory_library/include
+-F rtl/memory_library/filelist.f
 
 // iCache
 +incdir+./includes/
