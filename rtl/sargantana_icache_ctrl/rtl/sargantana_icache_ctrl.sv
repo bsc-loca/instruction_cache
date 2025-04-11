@@ -196,7 +196,7 @@ always_comb begin
             treq_valid_o      = ( !mmu_miss_i && !mmu_ex_valid_i && !is_flush_or_kill && !invalidation); 
             ifill_req_valid_o = 1'b0  ;
             flush_en_o        = flush_i  ;
-            replay_valid_o    = 1'b1;
+            replay_valid_o    = (!is_flush_or_kill && !invalidation);
         end
         KILL_TLB: begin //111
             //- It must wait to translation response
