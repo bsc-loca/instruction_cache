@@ -25,23 +25,19 @@ module sargantana_top_icache
     parameter logic         KILL_RESP           = 1'b1,
     parameter logic         LINES_256           = 1'b0,
 
-    parameter int unsigned  ICACHE_MEM_BLOCK    = 64,
-    parameter int unsigned  PADDR_SIZE          = 40,   //! Physical address size.
+    parameter int unsigned ICACHE_SIZE          = 16,   // Total size in KB 
+    parameter int unsigned ASSOCIATIVE          = 4,    // Associativity
+    parameter int unsigned ICACHE_MEM_BLOCK     = 64,   // Cache line size in Bytes
+    parameter int unsigned PADDR_SIZE           = 40,   //! Physical address size.
+    parameter int unsigned ADDR_SIZE            = 40,   //! Maximum between physical address size and virtual address size.
+    parameter int unsigned FETCH_WIDHT          = 128,
+    parameter int unsigned ITLB_CYCLE           = 0,    //! Pick cycle to do asynch ITLB transaction {0, 1}
 
-    parameter int unsigned  ADDR_SIZE           = 40,   //! Maximum between physical address size and virtual address size.
-    parameter int unsigned  IDX_BITS_SIZE       = 12,   //! Bits used for idx
-    parameter int unsigned  VPN_BITS_SIZE       = ADDR_SIZE - IDX_BITS_SIZE,    //! Bits used for vpn
-
-    parameter int unsigned  FETCH_WIDHT         = 128,
-
-    parameter int unsigned  ITLB_CYCLE          = 0,    //! Pick cycle to do asynch ITLB transaction {0, 1}
-
-    localparam int unsigned ICACHE_SIZE         = 16,   // Total size in KB 
-    localparam int unsigned ASSOCIATIVE         = 4,    // Associativity
-
-    //localparam int unsigned WORD_SIZE           = 64,                                                       //- Word size in a set.
     localparam int unsigned SET_WIDHT           = ICACHE_MEM_BLOCK*8,                                       //- Cache line
     localparam int unsigned ICACHE_DEPTH        = (((ICACHE_SIZE*1024)/ASSOCIATIVE)/ICACHE_MEM_BLOCK),
+    localparam int unsigned ICACHE_OFFSET_WIDTH = $clog2(SET_WIDHT/8),                                      // align to 64bytes
+    localparam int unsigned IDX_BITS_SIZE       = $clog2(ICACHE_DEPTH) + ICACHE_OFFSET_WIDTH,
+    localparam int unsigned VPN_BITS_SIZE       = ADDR_SIZE - IDX_BITS_SIZE,                                //! Bits used for vpn
 
     localparam int unsigned ICACHE_N_WAY        = ASSOCIATIVE,                                              //- Number of ways.
     //localparam int unsigned ICACHE_N_WAY_CLOG2  = $clog2( ICACHE_N_WAY ),
@@ -50,12 +46,9 @@ module sargantana_top_icache
     localparam int unsigned TAG_ADDR_WIDHT      = $clog2( TAG_DEPTH ),                                      //- 
     localparam int unsigned WAY_WIDHT           = SET_WIDHT,                                                //- 
 
-    localparam int unsigned ICACHE_OFFSET_WIDTH = $clog2(SET_WIDHT/8),                                      // align to 64bytes
-    localparam int unsigned ICACHE_INDEX_WIDTH  = $clog2(ICACHE_DEPTH) + ICACHE_OFFSET_WIDTH,
-
     //localparam int unsigned BLOCK_ADDR_SIZE     = ADDR_SIZE - ICACHE_OFFSET_WIDTH,
-    localparam int unsigned PPN_BIT_SIZE        = ADDR_SIZE - ICACHE_INDEX_WIDTH,
-    localparam int unsigned TAG_WIDHT           = ADDR_SIZE - ICACHE_INDEX_WIDTH,                           //- Tag size.
+    localparam int unsigned PPN_BIT_SIZE        = ADDR_SIZE - IDX_BITS_SIZE,
+    localparam int unsigned TAG_WIDHT           = ADDR_SIZE - IDX_BITS_SIZE,                           //- Tag size.
 
     localparam int unsigned ICACHE_TAG_WIDTH    = TAG_WIDHT,
     localparam int unsigned ICACHE_IDX_WIDTH    = ADDR_WIDHT
@@ -99,7 +92,7 @@ module sargantana_top_icache
     input  logic                            ifill_resp_ack_i            , // IFILL request was received
     input  logic [SET_WIDHT-1:0]            ifill_resp_data_i           , // Full cache line
     input  logic                            ifill_resp_inv_valid_i      , //- valid invalidation and
-    input  logic [ICACHE_INDEX_WIDTH-1:0]   ifill_resp_inv_paddr_i      , //- index to invalidate
+    input  logic [IDX_BITS_SIZE-1:0]        ifill_resp_inv_paddr_i      , //- index to invalidate
 
     output logic                            icache_ifill_req_valid_o    ,  // valid request
     //output logic [$clog2(ICACHE_N_WAY)-1:0] icache_ifill_req_way_o      ,  // way to replace
@@ -241,7 +234,7 @@ endgenerate
 
 //- Split virtual address into index and offset to address cache arrays.
 assign vaddr_index = valid_inv ? ifill_resp_inv_paddr_i[ICACHE_IDX_WIDTH:1] : 
-                                 idx_d[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
+                                 idx_d[IDX_BITS_SIZE-1:ICACHE_OFFSET_WIDTH];
                                  //vaddr_in[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
                      
 assign cline_tag_d  = mmu_tresp_ppn ;
@@ -262,7 +255,7 @@ end
 //---------------------------------------------------------------------
 //------------------------------------------------------ IFILL request.
 
-assign icache_ifill_req_paddr_o = {cline_tag_d,idx_q[11:ICACHE_OFFSET_WIDTH],{{ICACHE_OFFSET_WIDTH}{1'b0}}};
+assign icache_ifill_req_paddr_o = {cline_tag_d,idx_q[IDX_BITS_SIZE-1:ICACHE_OFFSET_WIDTH],{{ICACHE_OFFSET_WIDTH}{1'b0}}};
 
 assign icache_ifill_req_valid_o = ifill_req_valid  && !ireq_kill_d ;
 
