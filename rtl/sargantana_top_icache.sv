@@ -240,7 +240,7 @@ generate
 endgenerate
 
 //- Split virtual address into index and offset to address cache arrays.
-assign vaddr_index = valid_inv ? ifill_resp_inv_paddr_i[ICACHE_IDX_WIDTH:1] : 
+assign vaddr_index = valid_inv ? ifill_resp_inv_paddr_i[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH] : 
                                  idx_d[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
                                  //vaddr_in[ICACHE_INDEX_WIDTH-1:ICACHE_OFFSET_WIDTH];
                      
