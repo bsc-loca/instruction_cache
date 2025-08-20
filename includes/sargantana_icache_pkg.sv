@@ -18,45 +18,59 @@
  * under the License.
  */
 
+`ifdef PITON_SARG
+    `include "l15.tmp.h"
+`endif
+
 package sargantana_icache_pkg;
 
 import drac_pkg::*;
 
 //------------------------------------------------ Global Configuration
 
-`ifdef ICACHE_32B
-    localparam int unsigned ICACHE_MEM_BLOCK = 32 ; //32 Bytes
+// I$ line size in bits
+// NOTE: I$ only supports 32/64-byte cache lines
+`ifdef PITON_SARG
+    // When using Sargantana with OpenPiton, inherits the size from l15.tmp.h.
+    // NOTE: this is the responsibility of sims to enable the ICACHE_32B macro
+    // when CONFIG_L1I_CACHELINE_WIDTH equals 256.
+    localparam int unsigned ICACHELINE_SIZE = `CONFIG_L1I_CACHELINE_WIDTH;
+`elsif ICACHE_32B
+    localparam int unsigned ICACHELINE_SIZE = 256;
 `else
-    localparam int unsigned ICACHE_MEM_BLOCK = 64 ; //64 Bytes
-`endif 
-localparam int unsigned ICACHE_SIZE  = 16  ; // Total size in KB 
-localparam int unsigned ASSOCIATIVE  = 4   ; // Associativity
+    localparam int unsigned ICACHELINE_SIZE = 512;
+`endif
+
+// I$ total size in KB
+`ifdef PITON_SARG
+    localparam int unsigned ICACHE_SIZE = `CONFIG_L1I_SIZE/1024;
+`else
+    localparam int unsigned ICACHE_SIZE = 16;
+`endif
+
+// I$ associativity (number of ways)
+`ifdef PITON_SARG
+    localparam int unsigned ICACHE_ASSOC = `CONFIG_L1I_ASSOCIATIVITY;
+`else
+    localparam int unsigned ICACHE_ASSOC = 4;
+`endif
 
 //------------------------------------------------
-localparam int unsigned SET_WIDHT    = ICACHE_MEM_BLOCK*8 ; //- Cache line
-localparam int unsigned ICACHE_DEPTH = (((ICACHE_SIZE*1024)/ASSOCIATIVE)/ICACHE_MEM_BLOCK) ;
+localparam int unsigned SET_WIDHT    = ICACHELINE_SIZE ; //- Cache line
+localparam int unsigned ICACHE_DEPTH = (((ICACHE_SIZE*1024)/ICACHE_ASSOC)/(ICACHELINE_SIZE/8)) ;
 
-localparam int unsigned ICACHE_N_WAY = ASSOCIATIVE  ; //- Number of ways.
-localparam int unsigned ICACHE_N_WAY_CLOG2 = $clog2( ICACHE_N_WAY );
-localparam int unsigned TAG_DEPTH    = ICACHE_DEPTH            ; //- .
+localparam int unsigned ICACHE_N_WAY = ICACHE_ASSOC  ; //- Number of ways.
 localparam int unsigned ADDR_WIDHT   = $clog2( ICACHE_DEPTH )  ; //- icache Addr vector
-localparam int unsigned TAG_ADDR_WIDHT = $clog2( TAG_DEPTH )   ; //- 
 localparam int unsigned WAY_WIDHT    = SET_WIDHT               ; //- 
+localparam int unsigned ICACHE_INDEX_SIZE = $clog2(ICACHE_DEPTH) + $clog2(SET_WIDHT/8);
 
-localparam int unsigned ICACHE_OFFSET_WIDTH = $clog2(SET_WIDHT/8); // align to 64bytes
-localparam int unsigned ICACHE_INDEX_WIDTH  = $clog2(ICACHE_DEPTH) + ICACHE_OFFSET_WIDTH;
-
-localparam int unsigned PPN_BIT_SIZE    = drac_pkg::PHY_ADDR_SIZE - ICACHE_INDEX_WIDTH;
-localparam int unsigned TAG_WIDHT       = drac_pkg::PHY_ADDR_SIZE - ICACHE_INDEX_WIDTH; //- Tag size.
-localparam int unsigned VADDR_SIZE      = drac_pkg::VIRT_ADDR_SIZE; // TODO: check this
-
-localparam int unsigned ICACHE_TAG_WIDTH    = TAG_WIDHT;
-localparam int unsigned ICACHE_IDX_WIDTH    = ADDR_WIDHT;
+localparam int unsigned ICACHE_PPN_SIZE = drac_pkg::PHY_VIRT_MAX_ADDR_SIZE - ICACHE_INDEX_SIZE;
+localparam int unsigned ICACHE_VPN_SIZE = drac_pkg::PHY_VIRT_MAX_ADDR_SIZE - ICACHE_INDEX_SIZE;
 
 `ifdef FETCH_ONE_INST
     localparam int unsigned FETCH_WIDHT = riscv_pkg::INST_SIZE;
 `else
-    localparam int unsigned FETCH_WIDHT = drac_pkg::ICACHELINE_SIZE;
+    localparam int unsigned FETCH_WIDHT = ICACHELINE_SIZE;
 `endif
 
 //------------------------------------------------------- exception
@@ -70,12 +84,16 @@ typedef struct packed {
 
 
 //--------------------------------------------------------- iCache
+typedef logic [ICACHELINE_SIZE-1:0]   icache_line_t;
+typedef reg   [ICACHELINE_SIZE-1:0]   icache_line_reg_t;
+typedef logic [ICACHE_INDEX_SIZE-1:0] icache_idx_t;
+typedef logic [ICACHE_VPN_SIZE-1:0]   icache_vpn_t;
 
 typedef struct packed {
     logic                    valid  ;   // we request a new word
     logic                    kill   ;   // kill the current request
-    drac_pkg::icache_idx_t             idx;
-    drac_pkg::icache_vpn_t             vpn;  
+    icache_idx_t             idx;
+    icache_vpn_t             vpn;  
 } ireq_i_t;
 
 typedef struct packed {
@@ -100,15 +118,15 @@ typedef enum logic[2:0] {NO_REQ,
 //------------------------------------------------------
 //------------------------------------------------- MMU
     typedef struct packed {    
-        logic                    miss  ;
-        logic                    ptw_v ;  // ptw response valid
-        logic [PPN_BIT_SIZE-1:0] ppn   ;  // physical address in
-        logic                    xcpt  ;  // exception occurred during fetch
+        logic                       miss  ;
+        logic                       ptw_v ;  // ptw response valid
+        logic [ICACHE_PPN_SIZE-1:0] ppn   ;  // physical address in
+        logic                       xcpt  ;  // exception occurred during fetch
     } tresp_i_t;
 
     typedef struct packed {
         logic                  valid ;       // address translation request
-        drac_pkg::icache_vpn_t vpn   ;  
+        icache_vpn_t           vpn   ;
     } treq_o_t;
 
 
@@ -117,7 +135,7 @@ typedef enum logic[2:0] {NO_REQ,
   
 typedef struct packed {
     logic                          valid  ; //- valid invalidation and
-    logic [ICACHE_INDEX_WIDTH-1:0] paddr  ; //- index to invalidate
+    logic [ICACHE_INDEX_SIZE-1:0]  paddr  ; //- index to invalidate
 } inv_t;
   
   typedef struct packed {

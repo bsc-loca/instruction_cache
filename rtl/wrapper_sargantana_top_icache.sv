@@ -51,11 +51,12 @@ sargantana_top_icache #(
     .KILL_RESP                  (KILL_RESP),
     .LINES_256                  (LINES_256),
 
-    .ICACHE_MEM_BLOCK           (ICACHE_MEM_BLOCK),
+    .ICACHE_SIZE                (ICACHE_SIZE),
+    .ICACHE_MEM_BLOCK           (ICACHELINE_SIZE),
+    .ASSOCIATIVE                (ICACHE_ASSOC),
+
     .PADDR_SIZE                 (drac_pkg::PHY_ADDR_SIZE),
     .ADDR_SIZE                  (drac_pkg::PHY_ADDR_SIZE),
-    .IDX_BITS_SIZE              ($bits(drac_pkg::icache_idx_t)),
-    .VPN_BITS_SIZE              ($bits(drac_pkg::icache_vpn_t)),
     .FETCH_WIDHT                (FETCH_WIDHT)
 ) icache (
     `ifdef INTEL_PHYSICAL_MEM_CTRL
