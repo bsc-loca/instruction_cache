@@ -26,9 +26,9 @@ module sargantana_top_icache
     parameter logic         LINES_256           = 1'b0,
 
     parameter int unsigned  ICACHE_MEM_BLOCK    = 64,
-    parameter int unsigned  PADDR_SIZE          = 40,   //! Physical address size.
+    parameter int unsigned  PADDR_SIZE          = 42,   //! Physical address size.
 
-    parameter int unsigned  ADDR_SIZE           = 40,   //! Maximum between physical address size and virtual address size.
+    parameter int unsigned  ADDR_SIZE           = 42,   //! Maximum between physical address size and virtual address size.
     parameter int unsigned  IDX_BITS_SIZE       = 12,   //! Bits used for idx
     parameter int unsigned  VPN_BITS_SIZE       = ADDR_SIZE - IDX_BITS_SIZE,    //! Bits used for vpn
 
@@ -81,6 +81,7 @@ module sargantana_top_icache
     output logic                            icache_resp_valid_o         ,  // signals a valid read
     output logic [FETCH_WIDHT-1 :0]         icache_resp_data_o          ,  // 2+ cycle out: tag
     output logic [ADDR_SIZE-1:0]            icache_resp_vaddr_o         ,  // virtual address out
+    output logic [PPN_BIT_SIZE-1:0]         icache_resp_guest_ppn_o     ,  // guest ppn out
     output logic                            icache_resp_xcpt_o          ,  // we've encountered an exception
     output logic                            icache_resp_xcpt_g_o        ,  // we've encountered a guest exception
 
@@ -89,6 +90,7 @@ module sargantana_top_icache
     input  logic                            mmu_tresp_miss_i            ,
     input  logic                            mmu_tresp_ptw_v_i           ,  // ptw response valid
     input  logic [PPN_BIT_SIZE-1:0]         mmu_tresp_ppn_i             ,  // physical address in
+    input  logic [PPN_BIT_SIZE-1:0]         mmu_tresp_guest_ppn_i       ,  // guest ppn in
     input  logic                            mmu_tresp_xcpt_i            ,  // exception occurred during fetch
     input  logic                            mmu_tresp_xcpt_g_i            ,  // guest exception occurred during fetch
 
@@ -165,18 +167,21 @@ logic ctrl_ready                ;
 logic                    mmu_tresp_miss_d;
 logic                    mmu_tresp_ptw_v_d;
 logic [PPN_BIT_SIZE-1:0] mmu_tresp_ppn_d;
+logic [PPN_BIT_SIZE-1:0] mmu_tresp_guest_ppn_d;
 logic                    mmu_tresp_xcpt_d;
 logic                    mmu_tresp_xcpt_g_d;
     
 logic                    mmu_tresp_miss_q;
 logic                    mmu_tresp_ptw_v_q;
 logic [PPN_BIT_SIZE-1:0] mmu_tresp_ppn_q;
+logic [PPN_BIT_SIZE-1:0] mmu_tresp_guest_ppn_q;
 logic                    mmu_tresp_xcpt_q;
 logic                    mmu_tresp_xcpt_g_q;
 
 logic                    mmu_tresp_miss;
 logic                    mmu_tresp_ptw_v;
 logic [PPN_BIT_SIZE-1:0] mmu_tresp_ppn;
+logic [PPN_BIT_SIZE-1:0] mmu_tresp_guest_ppn;
 logic                    mmu_tresp_xcpt;
 logic                    mmu_tresp_xcpt_g;
 
@@ -216,6 +221,7 @@ generate
         assign mmu_tresp_miss_d     = mmu_tresp_miss_i;
         assign mmu_tresp_ptw_v_d    = mmu_tresp_ptw_v_i;
         assign mmu_tresp_ppn_d      = mmu_tresp_ppn_i;
+        assign mmu_tresp_guest_ppn_d = mmu_tresp_guest_ppn_i;
         assign mmu_tresp_xcpt_d     = mmu_tresp_xcpt_i;
         assign mmu_tresp_xcpt_g_d   = mmu_tresp_xcpt_g_i;
 
@@ -224,6 +230,7 @@ generate
         assign mmu_tresp_miss     = mmu_tresp_miss_q;
         assign mmu_tresp_ptw_v    = mmu_tresp_ptw_v_q;
         assign mmu_tresp_ppn      = mmu_tresp_ppn_q;
+        assign mmu_tresp_guest_ppn = mmu_tresp_guest_ppn_q;
         assign mmu_tresp_xcpt     = mmu_tresp_xcpt_q;
         assign mmu_tresp_xcpt_g   = mmu_tresp_xcpt_g_q;
     end
@@ -236,6 +243,7 @@ generate
         assign mmu_tresp_miss_d     = 1'b0;
         assign mmu_tresp_ptw_v_d    = 1'b0;
         assign mmu_tresp_ppn_d      = PPN_BIT_SIZE'(0);
+        assign mmu_tresp_guest_ppn_d = PPN_BIT_SIZE'(0);
         assign mmu_tresp_xcpt_d     = 1'b0;
         assign mmu_tresp_xcpt_g_d   = 1'b0;
 
@@ -243,6 +251,7 @@ generate
         assign mmu_tresp_miss     = mmu_tresp_miss_i;
         assign mmu_tresp_ptw_v    = mmu_tresp_ptw_v_i;
         assign mmu_tresp_ppn      = mmu_tresp_ppn_i;
+        assign mmu_tresp_guest_ppn = mmu_tresp_guest_ppn_i;
         assign mmu_tresp_xcpt     = mmu_tresp_xcpt_i;
         assign mmu_tresp_xcpt_g   = mmu_tresp_xcpt_g_i;
     end
@@ -257,6 +266,8 @@ assign cline_tag_d  = mmu_tresp_ppn ;
                                                                 
 // vaddr in fly 
 assign icache_resp_vaddr_o = {vpn_q,idx_q};
+
+assign icache_resp_guest_ppn_o = mmu_tresp_guest_ppn;
 
 // pass exception through
 logic icache_resp_valid ; 
@@ -429,11 +440,13 @@ sargantana_icache_ff #(
     .mmu_tresp_miss_d   ( mmu_tresp_miss_d  ),
     .mmu_tresp_ptw_v_d  ( mmu_tresp_ptw_v_d ),
     .mmu_tresp_ppn_d    ( mmu_tresp_ppn_d   ),
+    .mmu_tresp_guest_ppn_d ( mmu_tresp_guest_ppn_d   ),
     .mmu_tresp_xcpt_d   ( mmu_tresp_xcpt_d  ),
     .mmu_tresp_xcpt_g_d ( mmu_tresp_xcpt_g_d  ),
     .mmu_tresp_miss_q   ( mmu_tresp_miss_q  ),
     .mmu_tresp_ptw_v_q  ( mmu_tresp_ptw_v_q ),
     .mmu_tresp_ppn_q    ( mmu_tresp_ppn_q   ),
+    .mmu_tresp_guest_ppn_q ( mmu_tresp_guest_ppn_q   ),
     .mmu_tresp_xcpt_q   ( mmu_tresp_xcpt_q  ),
     .mmu_tresp_xcpt_g_q ( mmu_tresp_xcpt_g_q  ),
     .cache_enable_d     ( ifill_req_was_sent_d ),

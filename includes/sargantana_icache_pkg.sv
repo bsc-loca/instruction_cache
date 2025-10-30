@@ -83,6 +83,7 @@ typedef struct packed {
     logic                    valid;  // signals a valid read
     logic [FETCH_WIDHT-1 :0] data ;  // 2+ cycle out: tag
     logic   [drac_pkg::PHY_VIRT_MAX_ADDR_SIZE-1:0] vaddr;  // virtual address out
+    logic [PPN_BIT_SIZE-1:0] guest_ppn;
     logic                    xcpt ;  // we've encountered an exception
     logic                    guest_xcpt ;  // we've encountered a guest exception
 } iresp_o_t;
