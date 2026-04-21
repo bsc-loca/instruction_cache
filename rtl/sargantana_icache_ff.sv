@@ -54,12 +54,16 @@ module sargantana_icache_ff
     input  logic                            mmu_tresp_miss_d    ,
     input  logic                            mmu_tresp_ptw_v_d   ,  // ptw response valid
     input  logic [PPN_BIT_SIZE-1:0]         mmu_tresp_ppn_d     ,  // physical address in
+    input  logic [PPN_BIT_SIZE-1:0]         mmu_tresp_guest_ppn_d,  // guest ppn in
     input  logic                            mmu_tresp_xcpt_d    ,  // exception occurred during fetch
+    input  logic                            mmu_tresp_xcpt_g_d  ,  // guest exception occurred during fetch
 
     output logic                            mmu_tresp_miss_q    ,
     output logic                            mmu_tresp_ptw_v_q   ,  // ptw response valid
     output logic [PPN_BIT_SIZE-1:0]         mmu_tresp_ppn_q     ,  // physical address in
+    output logic [PPN_BIT_SIZE-1:0]         mmu_tresp_guest_ppn_q,  // guest ppn in
     output logic                            mmu_tresp_xcpt_q    ,  // exception occurred during fetch
+    output logic                            mmu_tresp_xcpt_g_q  ,  // guest exception occurred during fetch
     
     
     input  logic                            cache_enable_d   ,
@@ -80,7 +84,9 @@ always_ff @(posedge clk_i or negedge rstn_i) begin
         mmu_tresp_miss_q    <= '0;
         mmu_tresp_ptw_v_q   <= '0;
         mmu_tresp_ppn_q     <= '0;
-        mmu_tresp_xcpt_q    <= '0;   
+        mmu_tresp_guest_ppn_q <= '0;
+        mmu_tresp_xcpt_q    <= '0;  
+        mmu_tresp_xcpt_g_q  <= '0;   
         valid_ireq_q <= '0; 
         ireq_kill_q <= '0; 
     end
@@ -98,7 +104,9 @@ always_ff @(posedge clk_i or negedge rstn_i) begin
         mmu_tresp_miss_q    <= mmu_tresp_miss_d;
         mmu_tresp_ptw_v_q   <= mmu_tresp_ptw_v_d;
         mmu_tresp_ppn_q     <= mmu_tresp_ppn_d;
+        mmu_tresp_guest_ppn_q <= mmu_tresp_guest_ppn_d;
         mmu_tresp_xcpt_q    <= mmu_tresp_xcpt_d;
+        mmu_tresp_xcpt_g_q  <= mmu_tresp_xcpt_g_d;
     end
 end
 
